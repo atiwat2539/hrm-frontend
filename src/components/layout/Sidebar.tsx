@@ -61,12 +61,12 @@ export default function Sidebar({ onClose }: SidebarProps) {
   return (
     <aside className="w-64 bg-[#F4B6C2] text-gray-800 min-h-screen flex flex-col border-r border-[#EAA2B0] shadow-xl">
       <div className="p-5 flex items-center justify-between border-b border-white/40">
-        <div className="bg-white px-3 py-2 rounded-xl shadow-sm w-full flex justify-center">
+        <div className="bg-white px-2 py-1.5 rounded-xl shadow-sm w-full flex justify-center items-center">
           <Image 
             src="/logo.png" 
             alt="CMU Library Logo" 
-            width={160} 
-            height={55} 
+            width={120} 
+            height={40} 
             className="object-contain"
             priority 
           />

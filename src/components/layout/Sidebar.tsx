@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
@@ -59,10 +60,19 @@ export default function Sidebar({ onClose }: SidebarProps) {
 
   return (
     <aside className="w-64 bg-[#D94F70] text-white min-h-screen flex flex-col border-r border-[#C14664] shadow-xl">
-      <div className="p-6 flex items-center justify-between border-b border-white/20">
-        <h1 className="text-2xl font-black tracking-tight text-white">HRM System</h1>
+      <div className="p-5 flex items-center justify-between border-b border-white/20">
+        <div className="bg-white px-3 py-2 rounded-xl shadow-sm w-full flex justify-center">
+          <Image 
+            src="/logo.png" 
+            alt="CMU Library Logo" 
+            width={160} 
+            height={55} 
+            className="object-contain"
+            priority 
+          />
+        </div>
         {onClose && (
-          <button onClick={onClose} className="lg:hidden p-1 text-pink-200 hover:text-white">
+          <button onClick={onClose} className="lg:hidden p-1 ml-2 text-pink-200 hover:text-white flex-shrink-0">
             <X className="w-5 h-5" />
           </button>
         )}

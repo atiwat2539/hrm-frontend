@@ -77,11 +77,13 @@ export default function Sidebar({ onClose }: SidebarProps) {
                 <Link
                   href={item.path}
                   onClick={onClose}
-                  className={`flex items-center space-x-3 px-4 py-3 rounded-md transition-colors ${
-                    isActive ? 'bg-indigo-600 text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                  className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-300 group ${
+                    isActive 
+                      ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-md shadow-indigo-900/50 scale-[1.02]' 
+                      : 'text-slate-400 hover:bg-slate-800/80 hover:text-white hover:scale-[1.02]'
                   }`}
                 >
-                  <Icon className="w-5 h-5" />
+                  <Icon className={`w-5 h-5 transition-transform duration-300 ${isActive ? 'scale-110' : 'group-hover:scale-110 group-hover:text-indigo-400'}`} />
                   <span>{item.name}</span>
                 </Link>
               </li>
@@ -93,11 +95,13 @@ export default function Sidebar({ onClose }: SidebarProps) {
               <Link
                 href="/admin"
                 onClick={onClose}
-                className={`flex items-center space-x-3 px-4 py-3 mt-4 rounded-md transition-colors border border-slate-700 ${
-                  pathname.startsWith('/admin') ? 'bg-rose-600 text-white border-rose-500' : 'text-rose-400 hover:bg-slate-800 hover:text-rose-300'
+                className={`flex items-center space-x-3 px-4 py-3 mt-4 rounded-lg transition-all duration-300 border group ${
+                  pathname.startsWith('/admin') 
+                    ? 'bg-gradient-to-r from-rose-600 to-pink-600 text-white border-rose-500 shadow-md shadow-rose-900/50 scale-[1.02]' 
+                    : 'border-slate-800 text-rose-400 hover:bg-slate-800/80 hover:text-rose-300 hover:border-rose-900 hover:scale-[1.02]'
                 }`}
               >
-                <Shield className="w-5 h-5" />
+                <Shield className={`w-5 h-5 transition-transform duration-300 ${pathname.startsWith('/admin') ? 'scale-110' : 'group-hover:scale-110'}`} />
                 <span>Admin Panel</span>
               </Link>
             </li>
@@ -107,10 +111,10 @@ export default function Sidebar({ onClose }: SidebarProps) {
       <div className="p-4 border-t border-slate-800">
         <button 
           onClick={handleLogout}
-          className="w-full flex items-center space-x-3 text-slate-300 hover:text-white cursor-pointer transition-colors px-4 py-2 rounded-md hover:bg-slate-800"
+          className="w-full flex items-center space-x-3 text-slate-400 hover:text-white cursor-pointer transition-all duration-300 px-4 py-3 rounded-lg hover:bg-slate-800/80 hover:scale-[1.02] group"
         >
-          <LogOut className="w-5 h-5" />
-          <span>Logout</span>
+          <LogOut className="w-5 h-5 transition-transform duration-300 group-hover:scale-110 group-hover:text-red-400" />
+          <span className="group-hover:text-red-100 transition-colors">Logout</span>
         </button>
       </div>
     </aside>

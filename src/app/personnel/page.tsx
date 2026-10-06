@@ -159,7 +159,7 @@ export default function PersonnelPage() {
               className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
             />
           </div>
-          <Button onClick={openAddModal} className="bg-indigo-600 hover:bg-indigo-700 whitespace-nowrap px-4 py-2">
+          <Button onClick={openAddModal} className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white whitespace-nowrap px-5 py-2.5 rounded-lg shadow-md hover:shadow-lg hover:shadow-indigo-500/30 transition-all duration-300 hover:scale-[1.02] active:scale-95">
             <Plus className="w-5 h-5 mr-2" />
             เพิ่มพนักงาน
           </Button>
@@ -171,12 +171,12 @@ export default function PersonnelPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {filteredEmployees.map(emp => (
-            <div key={emp.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow relative group">
+            <div key={emp.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl hover:shadow-indigo-900/5 hover:-translate-y-1 transition-all duration-300 relative group">
               <div className="absolute top-4 right-4 flex space-x-2">
-                <button onClick={() => openEditModal(emp)} className="p-2 bg-white text-blue-600 hover:bg-blue-50 rounded-full shadow-sm border border-gray-200" title="แก้ไขข้อมูล">
+                <button onClick={() => openEditModal(emp)} className="p-2.5 bg-white text-indigo-600 hover:bg-indigo-50 hover:text-indigo-700 hover:scale-110 active:scale-95 rounded-full shadow-sm border border-gray-200 transition-all duration-200" title="แก้ไขข้อมูล">
                   <Edit2 className="w-4 h-4" />
                 </button>
-                <button onClick={() => handleDelete(emp.id)} className="p-2 bg-white text-red-600 hover:bg-red-50 rounded-full shadow-sm border border-gray-200" title="ลบข้อมูล">
+                <button onClick={() => handleDelete(emp.id)} className="p-2.5 bg-white text-red-500 hover:bg-red-50 hover:text-red-700 hover:scale-110 active:scale-95 rounded-full shadow-sm border border-gray-200 transition-all duration-200" title="ลบข้อมูล">
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>

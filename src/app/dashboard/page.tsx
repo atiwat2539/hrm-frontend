@@ -42,9 +42,10 @@ export default function DashboardPage() {
 
   // Fallbacks if data fails to load
   const totalEmployees = dashboardData?.totalEmployees || 0;
-  const newEmployees = dashboardData?.newEmployees || 0;
   const kpiCompleted = dashboardData?.kpiCompleted || '0%';
-  const trainingHours = dashboardData?.trainingHours || '0';
+  const averageKpiScore = dashboardData?.averageKpiScore || '0%';
+  const totalKpis = dashboardData?.totalKpis || 0;
+
   const translateKpiStatus = (status: string) => {
     switch (status) {
       case 'Achieved': return 'บรรลุเป้าหมาย';
@@ -53,19 +54,6 @@ export default function DashboardPage() {
       default: return status;
     }
   };
-
-  const translateMonth = (monthStr: string) => {
-    const monthMap: Record<string, string> = {
-      'Jan': 'ม.ค.', 'Feb': 'ก.พ.', 'Mar': 'มี.ค.', 'Apr': 'เม.ย.', 'May': 'พ.ค.', 'Jun': 'มิ.ย.',
-      'Jul': 'ก.ค.', 'Aug': 'ส.ค.', 'Sep': 'ก.ย.', 'Oct': 'ต.ค.', 'Nov': 'พ.ย.', 'Dec': 'ธ.ค.'
-    };
-    return monthMap[monthStr] || monthStr;
-  };
-
-  const growthData = (dashboardData?.growthData || []).map((d: any) => ({
-    ...d,
-    name: translateMonth(d.name)
-  }));
 
   const rawKpiData = dashboardData?.kpiData || [
     { name: 'Achieved', value: 0 },
@@ -79,15 +67,18 @@ export default function DashboardPage() {
   }));
   
   const individualKpiData = dashboardData?.individualKpiData || [];
+  const kpiDepartmentData = dashboardData?.kpiDepartmentData || [];
+  const todayEvents = dashboardData?.todayEvents || [];
 
   const stats = [
     { name: 'พนักงานทั้งหมด', value: totalEmployees.toString(), icon: Users, change: 'จำนวนปัจจุบัน', changeType: 'positive' },
-    { name: 'พนักงานใหม่', value: newEmployees.toString(), icon: UserPlus, change: '30 วันที่ผ่านมา', changeType: 'positive' },
+    { name: 'เป้าหมาย KPI ทั้งหมด', value: totalKpis.toString(), icon: Target, change: 'หัวข้อประเมิน', changeType: 'positive' },
     { name: 'KPI ที่สำเร็จ', value: kpiCompleted, icon: Target, change: 'อัตราภาพรวม', changeType: 'positive' },
-    { name: 'ชั่วโมงอบรม', value: trainingHours, icon: Clock, change: 'บันทึกรวมทั้งหมด', changeType: 'positive' },
+    { name: 'คะแนน KPI เฉลี่ย', value: averageKpiScore, icon: Target, change: 'คะแนนเฉลี่ยองค์กร', changeType: 'positive' },
   ];
 
   const COLORS = ['#10b981', '#f59e0b', '#ef4444'];
+  const DEPT_COLORS = ['#4f46e5', '#ec4899', '#8b5cf6', '#14b8a6', '#f59e0b', '#3b82f6'];
 
   return (
     <div className="space-y-6">
@@ -97,10 +88,10 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat) => {
+        {stats.map((stat, index) => {
           const Icon = stat.icon;
           return (
-            <div key={stat.name} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-xl hover:shadow-indigo-900/5 hover:-translate-y-1 transition-all duration-300 group cursor-default">
+            <div key={index} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-xl hover:shadow-indigo-900/5 hover:-translate-y-1 transition-all duration-300 group cursor-default">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-500 truncate">{stat.name}</p>
@@ -119,36 +110,37 @@ export default function DashboardPage() {
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Personnel Growth Chart */}
+        {/* Department KPI Chart */}
         <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-xl hover:shadow-indigo-900/5 transition-all duration-300 min-h-[400px]">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">การเติบโตของจำนวนพนักงาน (6 เดือนที่ผ่านมา)</h3>
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">คะแนน KPI เฉลี่ยแยกตามแผนก</h3>
           <div className="h-[320px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={growthData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} />
-                <YAxis axisLine={false} tickLine={false} />
-                <Tooltip 
-                  contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                />
-                <Legend />
-                <Line 
-                  type="monotone" 
-                  dataKey="employees" 
-                  name="พนักงานทั้งหมด"
-                  stroke="#4f46e5" 
-                  strokeWidth={3}
-                  dot={{ r: 4, strokeWidth: 2 }}
-                  activeDot={{ r: 8, strokeWidth: 0, fill: '#4f46e5' }} 
-                />
-              </LineChart>
-            </ResponsiveContainer>
+            {!kpiDepartmentData || kpiDepartmentData.length === 0 ? (
+              <div className="flex h-full items-center justify-center text-gray-400">ไม่มีข้อมูลแผนก</div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={kpiDepartmentData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} />
+                  <YAxis domain={[0, 100]} axisLine={false} tickLine={false} tickFormatter={(val) => `${val}%`} />
+                  <Tooltip 
+                    cursor={{ fill: 'transparent' }}
+                    formatter={(value) => [`${value}%`, 'คะแนนเฉลี่ย']}
+                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                  />
+                  <Bar dataKey="average" radius={[4, 4, 0, 0]}>
+                    {kpiDepartmentData.map((entry: any, index: number) => (
+                      <Cell key={`cell-${index}`} fill={DEPT_COLORS[index % DEPT_COLORS.length]} className="hover:opacity-80 transition-opacity" />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </div>
 
         {/* KPI Distribution Chart */}
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-xl hover:shadow-indigo-900/5 transition-all duration-300 min-h-[400px]">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">สัดส่วนสถานะ KPI</h3>
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">สถานะการประเมิน KPI ภาพรวม</h3>
           <div className="h-[320px] w-full">
             {kpiData.every((d: any) => d.value === 0) ? (
               <div className="flex h-full items-center justify-center text-gray-400">
@@ -182,10 +174,10 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Individual KPI Achievement Bar Chart */}
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-xl hover:shadow-indigo-900/5 transition-all duration-300 min-h-[400px]">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">ความสำเร็จ KPI รายบุคคล (10 อันดับแรก)</h3>
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">Top 10 พนักงานผลประเมินสูงสุด</h3>
           <div className="h-[320px] w-full">
             {!individualKpiData || individualKpiData.length === 0 ? (
               <div className="flex h-full items-center justify-center text-gray-400">
@@ -204,6 +196,42 @@ export default function DashboardPage() {
                   <Bar dataKey="achievement" fill="#10b981" barSize={20} radius={[0, 4, 4, 0]} name="ความสำเร็จ %" />
                 </BarChart>
               </ResponsiveContainer>
+            )}
+          </div>
+        </div>
+
+        {/* Today's Calendar Events */}
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-xl hover:shadow-indigo-900/5 transition-all duration-300 min-h-[400px] flex flex-col">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold text-gray-800">กิจกรรมและประชุมประจำวัน</h3>
+            <span className="bg-indigo-50 text-indigo-700 text-xs font-semibold px-2.5 py-1 rounded-full">วันนี้</span>
+          </div>
+          
+          <div className="flex-1 overflow-y-auto pr-2 space-y-3">
+            {!todayEvents || todayEvents.length === 0 ? (
+              <div className="flex h-full items-center justify-center text-gray-400">
+                ไม่มีกิจกรรมในวันนี้
+              </div>
+            ) : (
+              todayEvents.map((event: any) => (
+                <div key={event.id} className="flex items-start p-4 rounded-xl border border-gray-100 bg-gray-50/50 hover:bg-white hover:shadow-md transition-all duration-300 group">
+                  <div className="min-w-[70px] text-center border-r-2 border-gray-200 pr-4 mr-4 flex flex-col justify-center h-full">
+                    <span className="text-lg font-bold text-gray-800">{event.time}</span>
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="text-base font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors">{event.title}</h4>
+                    {event.category && (
+                      <div className="mt-2 flex items-center">
+                        <span 
+                          className="inline-block w-2.5 h-2.5 rounded-full mr-2" 
+                          style={{ backgroundColor: event.color || '#4f46e5' }}
+                        ></span>
+                        <span className="text-xs font-medium text-gray-600">{event.category}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))
             )}
           </div>
         </div>

@@ -169,14 +169,16 @@ export default function CalendarClient() {
     try {
       const token = localStorage.getItem('token');
       
-      const start_datetime = `${formData.start_date}T${formData.start_time}:00`;
-      const end_datetime = `${formData.end_date}T${formData.end_time}:00`;
-
+      // สร้าง Date object จากเวลาท้องถิ่น (Local time)
+      const startDateLocal = new Date(`${formData.start_date}T${formData.start_time}:00`);
+      const endDateLocal = new Date(`${formData.end_date}T${formData.end_time}:00`);
+      
+      // ส่งค่าเป็น ISO string ซึ่งจะมี 'Z' ต่อท้าย (UTC time) เพื่อให้ฝั่ง backend ที่รันบน Vercel (UTC) เข้าใจตรงกัน
       const payload = {
         title: formData.title,
         description: formData.description,
-        start_datetime,
-        end_datetime,
+        start_datetime: startDateLocal.toISOString(),
+        end_datetime: endDateLocal.toISOString(),
         category: formData.category,
         color: formData.color,
         location: formData.location,

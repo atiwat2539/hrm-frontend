@@ -397,9 +397,9 @@ export default function KpiPage() {
                   <th className="px-4 py-4 font-semibold">รอบ</th>
                   <th className="px-4 py-4 font-semibold">เป้าหมาย</th>
                   <th className="px-4 py-4 font-bold text-indigo-700">รวมสะสม</th>
-                  <th className="px-4 py-4 font-semibold w-48">เพิ่มยอดทำได้จริง</th>
                   <th className="px-4 py-4 font-semibold">หน่วย</th>
                   <th className="px-4 py-4 font-semibold">สถานะ</th>
+                  <th className="px-4 py-4 font-semibold text-center w-32">บันทึกผล</th>
                   <th className="px-4 py-4 font-semibold text-center">จัดการ</th>
                 </tr>
               </thead>
@@ -448,8 +448,19 @@ export default function KpiPage() {
                             </div>
                           </td>
                           
-                          {/* Inline Add Actual Value */}
+                          <td className="px-4 py-4 text-gray-500">{kpi.unit}</td>
                           <td className="px-4 py-4">
+                            <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
+                              kpi.status === 'approved' ? 'bg-green-100 text-green-800' :
+                              kpi.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                              'bg-red-100 text-red-800'
+                            }`}>
+                              {kpi.status === 'approved' ? 'สำเร็จ' : kpi.status === 'pending' ? 'กำลังดำเนินการ' : 'ยังไม่เริ่ม/ต่ำกว่าเป้า'}
+                            </span>
+                          </td>
+
+                          {/* Inline Add Actual Value */}
+                          <td className="px-4 py-4 text-center">
                             <Button 
                               variant="outline" 
                               size="sm" 
@@ -461,16 +472,6 @@ export default function KpiPage() {
                             </Button>
                           </td>
 
-                          <td className="px-4 py-4 text-gray-500">{kpi.unit}</td>
-                          <td className="px-4 py-4">
-                            <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
-                              kpi.status === 'approved' ? 'bg-green-100 text-green-800' :
-                              kpi.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                              'bg-red-100 text-red-800'
-                            }`}>
-                              {kpi.status === 'approved' ? 'สำเร็จ' : kpi.status === 'pending' ? 'กำลังดำเนินการ' : 'ยังไม่เริ่ม/ต่ำกว่าเป้า'}
-                            </span>
-                          </td>
                           <td className="px-4 py-4 text-center">
                             <div className="flex items-center justify-center space-x-2">
                               <button 
@@ -613,8 +614,8 @@ export default function KpiPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">ปี (ค.ศ.)</label>
-                  <input required type="number" value={monthlyData.year} onChange={e => setMonthlyData({...monthlyData, year: Number(e.target.value)})} className="w-full border rounded-md px-3 py-2 text-sm" />
+                  <label className="block text-sm font-medium mb-1">ปี (พ.ศ.)</label>
+                  <input required type="number" value={monthlyData.year + 543} onChange={e => setMonthlyData({...monthlyData, year: Number(e.target.value) - 543})} className="w-full border rounded-md px-3 py-2 text-sm" />
                 </div>
               </div>
 
@@ -679,7 +680,7 @@ export default function KpiPage() {
                       
                       return (
                         <tr key={res.id} className="border-b hover:bg-gray-50">
-                          <td className="px-4 py-3 font-medium text-gray-900">{mName} {res.year}</td>
+                          <td className="px-4 py-3 font-medium text-gray-900">{mName} {res.year + 543}</td>
                           <td className="px-4 py-3 font-bold text-indigo-600">+{res.actual} <span className="text-xs font-normal text-gray-500">{selectedKpiHistory.unit}</span></td>
                           <td className="px-4 py-3">{res.note || '-'}</td>
                           <td className="px-4 py-3 text-xs text-gray-500">

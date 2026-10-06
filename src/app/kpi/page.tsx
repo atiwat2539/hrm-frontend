@@ -264,7 +264,7 @@ export default function KpiPage() {
           <div className="flex items-center space-x-3">
             {viewMode === 'matrix' && (
               <div className="flex items-center space-x-2 mr-2">
-                <label className="text-sm font-medium text-gray-700">ปีงบประมาณ:</label>
+                <label className="text-sm font-medium text-gray-700">ปี:</label>
                 <select 
                   value={matrixYear} 
                   onChange={e => setMatrixYear(Number(e.target.value))}

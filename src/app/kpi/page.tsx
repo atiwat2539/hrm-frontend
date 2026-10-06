@@ -289,7 +289,7 @@ export default function KpiPage() {
                 <option value="all">-- แสดงทั้งหมด --</option>
                 {employees.map(emp => (
                   <option key={emp.id} value={emp.id}>
-                    {emp.first_name} {emp.last_name} ({emp.employee_code})
+                    {emp.first_name} {emp.last_name}
                   </option>
                 ))}
               </select>
@@ -422,8 +422,8 @@ export default function KpiPage() {
                             {kpi.employee ? `${kpi.employee.first_name} ${kpi.employee.last_name}` : `ID: ${kpi.employee_id}`}
                           </td>
                           <td className="px-4 py-4">
-                            <div>{kpi.sub_title || '-'}</div>
-                            <div className="text-xs text-gray-400 mt-1 max-w-xs truncate" title={kpi.description}>{kpi.description}</div>
+                            <div className="font-semibold text-gray-800">{kpi.sub_title || '-'}</div>
+                            <div className="text-sm text-gray-500 mt-1 whitespace-pre-wrap">{kpi.description}</div>
                           </td>
                           <td className="px-4 py-4 text-gray-500 text-sm">
                             {kpi.period === 'monthly' ? 'รายเดือน' : 
@@ -516,7 +516,7 @@ export default function KpiPage() {
                 <select required value={formData.employee_id} onChange={e => setFormData({...formData, employee_id: e.target.value})} className="w-full border rounded-md px-3 py-2 text-sm">
                   <option value="">-- กรุณาเลือกพนักงาน --</option>
                   {employees.map(emp => (
-                    <option key={emp.id} value={emp.id}>{emp.first_name} {emp.last_name} ({emp.employee_code})</option>
+                    <option key={emp.id} value={emp.id}>{emp.first_name} {emp.last_name}</option>
                   ))}
                 </select>
               </div>

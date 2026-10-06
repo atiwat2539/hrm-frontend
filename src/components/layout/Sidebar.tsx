@@ -58,17 +58,17 @@ export default function Sidebar({ onClose }: SidebarProps) {
   };
 
   return (
-    <aside className="w-64 bg-slate-900 text-white min-h-screen flex flex-col">
-      <div className="p-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold tracking-tight">HRM System</h1>
+    <aside className="w-64 bg-[#2A3432] text-white min-h-screen flex flex-col border-r border-[#1C2322] shadow-xl">
+      <div className="p-6 flex items-center justify-between border-b border-[#3B4745]">
+        <h1 className="text-2xl font-bold tracking-tight text-[#F0EEE9]">HRM System</h1>
         {onClose && (
-          <button onClick={onClose} className="lg:hidden p-1 text-slate-400 hover:text-white">
+          <button onClick={onClose} className="lg:hidden p-1 text-[#A3C4BC] hover:text-[#F0EEE9]">
             <X className="w-5 h-5" />
           </button>
         )}
       </div>
       <nav className="flex-1 mt-6">
-        <ul className="space-y-1 px-4">
+        <ul className="space-y-2 px-4">
           {menuItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname.startsWith(item.path);
@@ -77,13 +77,13 @@ export default function Sidebar({ onClose }: SidebarProps) {
                 <Link
                   href={item.path}
                   onClick={onClose}
-                  className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-300 group ${
+                  className={`flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-300 group ${
                     isActive 
-                      ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-md shadow-indigo-900/50 scale-[1.02]' 
-                      : 'text-slate-400 hover:bg-slate-800/80 hover:text-white hover:scale-[1.02]'
+                      ? 'bg-gradient-to-r from-[#A3C4BC] to-[#87B3A8] text-[#1C2322] font-bold shadow-md shadow-[#A3C4BC]/20 scale-[1.02]' 
+                      : 'text-[#C9D6D3] hover:bg-[#3B4745] hover:text-[#F0EEE9] hover:scale-[1.02]'
                   }`}
                 >
-                  <Icon className={`w-5 h-5 transition-transform duration-300 ${isActive ? 'scale-110' : 'group-hover:scale-110 group-hover:text-indigo-400'}`} />
+                  <Icon className={`w-5 h-5 transition-transform duration-300 ${isActive ? 'scale-110' : 'group-hover:scale-110 group-hover:text-[#F0EEE9]'}`} />
                   <span>{item.name}</span>
                 </Link>
               </li>
@@ -95,13 +95,13 @@ export default function Sidebar({ onClose }: SidebarProps) {
               <Link
                 href="/admin"
                 onClick={onClose}
-                className={`flex items-center space-x-3 px-4 py-3 mt-4 rounded-lg transition-all duration-300 border group ${
+                className={`flex items-center space-x-3 px-4 py-3 mt-4 rounded-xl transition-all duration-300 border group ${
                   pathname.startsWith('/admin') 
-                    ? 'bg-gradient-to-r from-rose-600 to-pink-600 text-white border-rose-500 shadow-md shadow-rose-900/50 scale-[1.02]' 
-                    : 'border-slate-800 text-rose-400 hover:bg-slate-800/80 hover:text-rose-300 hover:border-rose-900 hover:scale-[1.02]'
+                    ? 'bg-gradient-to-r from-[#E5989B] to-[#D58386] text-white border-transparent shadow-md shadow-[#E5989B]/30 scale-[1.02] font-bold' 
+                    : 'border-[#4A5755] text-[#E5989B] hover:bg-[#3B4745] hover:text-[#F4D8D8] hover:border-[#E5989B] hover:scale-[1.02]'
                 }`}
               >
-                <Shield className={`w-5 h-5 transition-transform duration-300 ${pathname.startsWith('/admin') ? 'scale-110' : 'group-hover:scale-110'}`} />
+                <Shield className={`w-5 h-5 transition-transform duration-300 ${pathname.startsWith('/admin') ? 'scale-110 text-white' : 'group-hover:scale-110'}`} />
                 <span>Admin Panel</span>
               </Link>
             </li>

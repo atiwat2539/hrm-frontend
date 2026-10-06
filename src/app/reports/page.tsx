@@ -84,7 +84,7 @@ export default function ReportsPage() {
                     outerRadius={100}
                     paddingAngle={5}
                     dataKey="value"
-                    label={({name, percent}) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    label={({name, percent}) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
                   >
                     {data.deptDistribution.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -120,7 +120,7 @@ export default function ReportsPage() {
                     outerRadius={100}
                     paddingAngle={5}
                     dataKey="value"
-                    label={({name, percent}) => `${name === 'full_time' ? 'Full Time' : name === 'contract' ? 'Contract' : name} ${(percent * 100).toFixed(0)}%`}
+                    label={({name, percent}) => `${name === 'full_time' ? 'Full Time' : name === 'contract' ? 'Contract' : name} ${((percent || 0) * 100).toFixed(0)}%`}
                   >
                     {data.typeDistribution.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[(index + 2) % COLORS.length]} />

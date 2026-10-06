@@ -325,7 +325,7 @@ export default function KpiPage() {
                     if (!acc[empName]) acc[empName] = [];
                     acc[empName].push(kpi);
                     return acc;
-                  }, {} as Record<string, any[]>)).map(([empName, empKpis]) => (
+                  }, {} as Record<string, any[]>)).map(([empName, empKpis]: [string, any[]]) => (
                     <Fragment key={empName}>
                       <tr className="bg-slate-100 border-b border-gray-200">
                         <td colSpan={15} className="px-3 py-2 font-bold text-slate-800">
@@ -390,7 +390,7 @@ export default function KpiPage() {
                 {Object.keys(groupedKpis).length === 0 ? (
                   <tr><td colSpan={9} className="text-center py-4">ไม่มีข้อมูลภาระงาน</td></tr>
                 ) : (
-                  Object.entries(groupedKpis).map(([mainTopic, topicKpis]) => (
+                  Object.entries(groupedKpis).map(([mainTopic, topicKpis]: [string, any[]]) => (
                     <Fragment key={mainTopic}>
                       <tr className="bg-indigo-50 border-b border-indigo-200">
                         <td colSpan={9} className="px-4 py-3 font-bold text-indigo-900 text-[15px]">

@@ -13,8 +13,10 @@ import {
   Bell,
   Settings,
   LogOut,
-  X
+  X,
+  Shield
 } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 interface SidebarProps {
   onClose?: () => void;
@@ -35,6 +37,19 @@ const menuItems = [
 export default function Sidebar({ onClose }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const [userRole, setUserRole] = useState<string>('');
+
+  useEffect(() => {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        setUserRole(user.role);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -72,6 +87,21 @@ export default function Sidebar({ onClose }: SidebarProps) {
               </li>
             );
           })}
+          
+          {userRole === 'admin' && (
+            <li>
+              <Link
+                href="/admin"
+                onClick={onClose}
+                className={`flex items-center space-x-3 px-4 py-3 mt-4 rounded-md transition-colors border border-slate-700 ${
+                  pathname.startsWith('/admin') ? 'bg-rose-600 text-white border-rose-500' : 'text-rose-400 hover:bg-slate-800 hover:text-rose-300'
+                }`}
+              >
+                <Shield className="w-5 h-5" />
+                <span>Admin Panel</span>
+              </Link>
+            </li>
+          )}
         </ul>
       </nav>
       <div className="p-4 border-t border-slate-800">

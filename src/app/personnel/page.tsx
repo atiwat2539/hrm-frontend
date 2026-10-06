@@ -40,7 +40,8 @@ export default function PersonnelPage() {
       const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/employees`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setEmployees(res.data);
+      const sortedEmployees = res.data.sort((a: Employee, b: Employee) => a.id - b.id);
+      setEmployees(sortedEmployees);
     } catch (err) {
       console.error('Failed to fetch employees', err);
     } finally {

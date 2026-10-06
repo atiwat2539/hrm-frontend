@@ -67,7 +67,8 @@ export default function KpiPage() {
         axios.get(EMP_API_URL, { headers: { Authorization: `Bearer ${token}` } })
       ]);
       
-      setKpis(kpiRes.data);
+      const sortedKpis = kpiRes.data.sort((a: any, b: any) => a.id - b.id);
+      setKpis(sortedKpis);
       setEmployees(empRes.data);
     } catch (err) {
       console.error('Failed to fetch data', err);

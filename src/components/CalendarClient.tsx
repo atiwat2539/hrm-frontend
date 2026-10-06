@@ -118,15 +118,28 @@ export default function CalendarClient() {
     // Parse dates
     const startDate = new Date(selectedEvent.start);
     const endDate = selectedEvent.end ? new Date(selectedEvent.end) : startDate;
+
+    const toLocalYYYYMMDD = (d: Date) => {
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+
+    const toLocalHHMM = (d: Date) => {
+      const hours = String(d.getHours()).padStart(2, '0');
+      const mins = String(d.getMinutes()).padStart(2, '0');
+      return `${hours}:${mins}`;
+    };
     
     setEditEventId(selectedEvent.id);
     setFormData({
       title: selectedEvent.title,
       description: selectedEvent.extendedProps.description || '',
-      start_date: startDate.toISOString().split('T')[0],
-      start_time: startDate.toTimeString().slice(0,5),
-      end_date: endDate.toISOString().split('T')[0],
-      end_time: endDate.toTimeString().slice(0,5),
+      start_date: toLocalYYYYMMDD(startDate),
+      start_time: toLocalHHMM(startDate),
+      end_date: toLocalYYYYMMDD(endDate),
+      end_time: toLocalHHMM(endDate),
       category: selectedEvent.extendedProps.category || '',
       location: selectedEvent.extendedProps.location || '',
       color: selectedEvent.backgroundColor || '#4f46e5',

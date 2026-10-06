@@ -39,7 +39,7 @@ export default function KpiPage() {
   const [viewMode, setViewMode] = useState<'list' | 'matrix'>('list');
   const [matrixYear, setMatrixYear] = useState<number>(() => {
     const d = new Date();
-    return d.getMonth() + 1 >= 10 ? d.getFullYear() + 1 : d.getFullYear();
+    return d.getMonth() + 1 >= 6 ? d.getFullYear() + 1 : d.getFullYear();
   });
 
   // Filter state
@@ -270,11 +270,12 @@ export default function KpiPage() {
                   onChange={e => setMatrixYear(Number(e.target.value))}
                   className="border border-gray-300 rounded-md px-3 py-1.5 text-sm bg-white"
                 >
-                  <option value={new Date().getFullYear() + 2}>{new Date().getFullYear() + 2}</option>
-                  <option value={new Date().getFullYear() + 1}>{new Date().getFullYear() + 1}</option>
-                  <option value={new Date().getFullYear()}>{new Date().getFullYear()}</option>
-                  <option value={new Date().getFullYear() - 1}>{new Date().getFullYear() - 1}</option>
-                  <option value={new Date().getFullYear() - 2}>{new Date().getFullYear() - 2}</option>
+                  {[2, 1, 0, -1, -2].map(offset => {
+                    const y = new Date().getFullYear() + offset;
+                    return (
+                      <option key={y} value={y}>{y + 543}</option>
+                    )
+                  })}
                 </select>
               </div>
             )}
@@ -304,6 +305,10 @@ export default function KpiPage() {
               <thead className="text-xs text-gray-800 bg-indigo-50/50 border-b border-gray-200">
                 <tr>
                   <th className="px-3 py-3 font-semibold border-r border-gray-200 min-w-[200px]">หัวข้อ KPI</th>
+                  <th className="px-2 py-3 font-semibold text-center border-r border-gray-200">มิ.ย.</th>
+                  <th className="px-2 py-3 font-semibold text-center border-r border-gray-200">ก.ค.</th>
+                  <th className="px-2 py-3 font-semibold text-center border-r border-gray-200">ส.ค.</th>
+                  <th className="px-2 py-3 font-semibold text-center border-r border-gray-200">ก.ย.</th>
                   <th className="px-2 py-3 font-semibold text-center border-r border-gray-200">ต.ค.</th>
                   <th className="px-2 py-3 font-semibold text-center border-r border-gray-200">พ.ย.</th>
                   <th className="px-2 py-3 font-semibold text-center border-r border-gray-200">ธ.ค.</th>
@@ -312,10 +317,6 @@ export default function KpiPage() {
                   <th className="px-2 py-3 font-semibold text-center border-r border-gray-200">มี.ค.</th>
                   <th className="px-2 py-3 font-semibold text-center border-r border-gray-200">เม.ย.</th>
                   <th className="px-2 py-3 font-semibold text-center border-r border-gray-200">พ.ค.</th>
-                  <th className="px-2 py-3 font-semibold text-center border-r border-gray-200">มิ.ย.</th>
-                  <th className="px-2 py-3 font-semibold text-center border-r border-gray-200">ก.ค.</th>
-                  <th className="px-2 py-3 font-semibold text-center border-r border-gray-200">ส.ค.</th>
-                  <th className="px-2 py-3 font-semibold text-center border-r border-gray-200">ก.ย.</th>
                   <th className="px-3 py-3 font-bold text-indigo-700 text-center border-r border-gray-200 bg-indigo-50">รวมทั้งปี</th>
                   <th className="px-3 py-3 font-semibold text-center">เป้าหมายรายปี</th>
                 </tr>
@@ -340,21 +341,21 @@ export default function KpiPage() {
                         </td>
                       </tr>
                       {empKpis.map((kpi: any) => {
-                        // Calculate monthly sums for this Fiscal Year
-                        // Index: 0=Oct, 1=Nov, 2=Dec, 3=Jan, 4=Feb, 5=Mar, 6=Apr, 7=May, 8=Jun, 9=Jul, 10=Aug, 11=Sep
+                        // Calculate monthly sums for this Fiscal Year (Jun - May)
+                        // Index: 0=Jun, 1=Jul, 2=Aug, 3=Sep, 4=Oct, 5=Nov, 6=Dec, 7=Jan, 8=Feb, 9=Mar, 10=Apr, 11=May
                         const monthlySums = Array(12).fill(0);
                         if (kpi.results) {
                           kpi.results.forEach((r: any) => {
                             const monthInt = parseInt(r.month);
-                            if (monthInt >= 10 && monthInt <= 12) {
-                              // Oct, Nov, Dec belong to matrixYear - 1
+                            if (monthInt >= 6 && monthInt <= 12) {
+                              // Jun, Jul, ..., Dec belong to matrixYear - 1
                               if (r.year === matrixYear - 1) {
-                                monthlySums[monthInt - 10] += r.actual;
+                                monthlySums[monthInt - 6] += r.actual;
                               }
-                            } else if (monthInt >= 1 && monthInt <= 9) {
-                              // Jan - Sep belong to matrixYear
+                            } else if (monthInt >= 1 && monthInt <= 5) {
+                              // Jan - May belong to matrixYear
                               if (r.year === matrixYear) {
-                                monthlySums[monthInt + 2] += r.actual;
+                                monthlySums[monthInt + 6] += r.actual;
                               }
                             }
                           });

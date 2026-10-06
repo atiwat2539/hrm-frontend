@@ -70,7 +70,11 @@ export default function PersonnelPage() {
       start_date: emp.start_date ? new Date(emp.start_date).toISOString().split('T')[0] : ''
     });
     setSelectedFile(null);
-    setPreviewUrl(emp.profile_image ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${emp.profile_image}` : null);
+    const imageUrl = emp.profile_image?.startsWith('http') 
+      ? emp.profile_image 
+      : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${emp.profile_image}`;
+      
+    setPreviewUrl(emp.profile_image ? imageUrl : null);
     setIsModalOpen(true);
   };
 
@@ -168,20 +172,24 @@ export default function PersonnelPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {filteredEmployees.map(emp => (
             <div key={emp.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow relative group">
-              <div className="absolute top-4 right-4 flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button onClick={() => openEditModal(emp)} className="p-2 bg-white text-blue-600 hover:bg-blue-50 rounded-full shadow-sm border border-gray-200">
+              <div className="absolute top-4 right-4 flex space-x-2">
+                <button onClick={() => openEditModal(emp)} className="p-2 bg-white text-blue-600 hover:bg-blue-50 rounded-full shadow-sm border border-gray-200" title="แก้ไขข้อมูล">
                   <Edit2 className="w-4 h-4" />
                 </button>
-                <button onClick={() => handleDelete(emp.id)} className="p-2 bg-white text-red-600 hover:bg-red-50 rounded-full shadow-sm border border-gray-200">
+                <button onClick={() => handleDelete(emp.id)} className="p-2 bg-white text-red-600 hover:bg-red-50 rounded-full shadow-sm border border-gray-200" title="ลบข้อมูล">
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>
               
-              <div className="p-6">
+              <div className="p-6 mt-4">
                 <div className="flex items-center space-x-4 mb-4">
                   <div className="w-20 h-20 rounded-full bg-gray-100 border-2 border-indigo-100 flex items-center justify-center overflow-hidden flex-shrink-0">
                     {emp.profile_image ? (
-                      <img src={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${emp.profile_image}`} alt={emp.first_name} className="w-full h-full object-cover" />
+                      <img 
+                        src={emp.profile_image.startsWith('http') ? emp.profile_image : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${emp.profile_image}`} 
+                        alt={emp.first_name} 
+                        className="w-full h-full object-cover" 
+                      />
                     ) : (
                       <UserIcon className="w-10 h-10 text-gray-400" />
                     )}

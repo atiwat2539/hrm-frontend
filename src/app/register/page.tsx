@@ -6,6 +6,7 @@ import { Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import axios from 'axios';
 import Link from 'next/link';
+import { ShaderBackground } from '@/components/ui/manu';
 
 export default function RegisterPage() {
   const [username, setUsername] = useState('');
@@ -46,19 +47,21 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
+    <div className="relative min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8 overflow-hidden bg-slate-900">
+      <ShaderBackground className="absolute inset-0 z-0 opacity-80" />
+      
+      <div className="relative z-10 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center">
-          <div className="w-16 h-16 bg-indigo-600 rounded-full flex items-center justify-center">
+          <div className="w-16 h-16 bg-indigo-600 rounded-full flex items-center justify-center shadow-lg">
             <Building2 className="w-8 h-8 text-white" />
           </div>
         </div>
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+        <h2 className="mt-6 text-center text-3xl font-extrabold text-white drop-shadow-md">
           สร้างบัญชีใหม่ (Register)
         </h2>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+      <div className="relative z-10 mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
           <form className="space-y-6" onSubmit={handleRegister}>
             <div>

@@ -126,9 +126,9 @@ export default function AdminPage() {
             </thead>
             <tbody className="divide-y divide-gray-100">
               {users.map(user => (
-                <tr key={user.id} className="hover:bg-gray-50 transition-colors">
+                <tr key={user.id} className="hover:bg-indigo-50/50 hover:shadow-sm transition-all duration-300 group">
                   <td className="px-6 py-4">
-                    <div className="font-medium text-gray-900">{user.username}</div>
+                    <div className="font-medium text-gray-900 group-hover:text-indigo-700 transition-colors">{user.username}</div>
                     <div className="text-xs text-gray-500">ID: {user.id}</div>
                   </td>
                   <td className="px-6 py-4">{user.email}</td>
@@ -136,10 +136,10 @@ export default function AdminPage() {
                     <select
                       value={user.role}
                       onChange={(e) => handleRoleChange(user.id, e.target.value)}
-                      className={`border text-sm rounded-md px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-indigo-500 ${
-                        user.role === 'admin' ? 'bg-red-50 border-red-200 text-red-700 font-medium' :
-                        user.role === 'hr' ? 'bg-blue-50 border-blue-200 text-blue-700' :
-                        'bg-gray-50 border-gray-300'
+                      className={`border text-sm rounded-md px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-300 cursor-pointer ${
+                        user.role === 'admin' ? 'bg-red-50 border-red-200 text-red-700 font-medium hover:bg-red-100' :
+                        user.role === 'hr' ? 'bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100' :
+                        'bg-gray-50 border-gray-300 hover:bg-gray-100'
                       }`}
                     >
                       <option value="employee">Employee (พนักงาน)</option>
@@ -151,9 +151,9 @@ export default function AdminPage() {
                     <select
                       value={user.status}
                       onChange={(e) => handleStatusChange(user.id, e.target.value)}
-                      className={`border text-sm rounded-md px-3 py-1.5 focus:outline-none ${
-                        user.status === 'active' ? 'bg-emerald-50 border-emerald-200 text-emerald-700' :
-                        'bg-rose-50 border-rose-200 text-rose-700'
+                      className={`border text-sm rounded-md px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-300 cursor-pointer ${
+                        user.status === 'active' ? 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100' :
+                        'bg-rose-50 border-rose-200 text-rose-700 hover:bg-rose-100'
                       }`}
                     >
                       <option value="active">Active (ใช้งานได้)</option>
@@ -166,7 +166,7 @@ export default function AdminPage() {
                   <td className="px-6 py-4 text-center">
                     <button
                       onClick={() => handleDelete(user.id)}
-                      className="p-2 text-rose-500 hover:bg-rose-50 rounded-md transition-colors"
+                      className="p-2.5 text-rose-500 hover:bg-rose-50 hover:text-rose-700 rounded-full transition-all duration-300 hover:scale-110 active:scale-95"
                       title="ลบบัญชีผู้ใช้"
                     >
                       <Trash2 className="w-4 h-4" />

@@ -65,7 +65,7 @@ export default function ReportsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
         {/* Department Distribution */}
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-xl hover:shadow-indigo-900/5 hover:-translate-y-1 transition-all duration-300">
           <div className="flex items-center mb-6 border-b pb-4">
             <div className="bg-indigo-50 p-2 rounded-lg mr-3">
               <Users className="w-5 h-5 text-indigo-600" />
@@ -87,7 +87,7 @@ export default function ReportsPage() {
                     label={({name, percent}) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
                   >
                     {data.deptDistribution.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} className="hover:opacity-80 transition-opacity duration-300 outline-none cursor-pointer" />
                     ))}
                   </Pie>
                   <Tooltip formatter={(value) => [`${value} คน`, 'จำนวนพนักงาน']} />
@@ -101,7 +101,7 @@ export default function ReportsPage() {
         </div>
 
         {/* Employment Type Distribution */}
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-xl hover:shadow-indigo-900/5 hover:-translate-y-1 transition-all duration-300">
           <div className="flex items-center mb-6 border-b pb-4">
             <div className="bg-sky-50 p-2 rounded-lg mr-3">
               <Users className="w-5 h-5 text-sky-600" />
@@ -123,7 +123,7 @@ export default function ReportsPage() {
                     label={({name, percent}) => `${name === 'full_time' ? 'Full Time' : name === 'contract' ? 'Contract' : name} ${((percent || 0) * 100).toFixed(0)}%`}
                   >
                     {data.typeDistribution.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[(index + 2) % COLORS.length]} />
+                      <Cell key={`cell-${index}`} fill={COLORS[(index + 2) % COLORS.length]} className="hover:opacity-80 transition-opacity duration-300 outline-none cursor-pointer" />
                     ))}
                   </Pie>
                   <Tooltip formatter={(value) => [`${value} คน`, 'จำนวน']} />
@@ -137,7 +137,7 @@ export default function ReportsPage() {
         </div>
 
         {/* Average KPI Score by Department */}
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 lg:col-span-2">
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-xl hover:shadow-indigo-900/5 hover:-translate-y-1 transition-all duration-300 lg:col-span-2">
           <div className="flex items-center mb-6 border-b pb-4">
             <div className="bg-emerald-50 p-2 rounded-lg mr-3">
               <TrendingUp className="w-5 h-5 text-emerald-600" />

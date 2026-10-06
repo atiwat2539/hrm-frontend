@@ -84,7 +84,7 @@ export default function TrainingPage() {
           </h1>
           <p className="text-sm text-gray-500 mt-1">จัดการหลักสูตรอบรมและพัฒนาทักษะพนักงาน</p>
         </div>
-        <Button onClick={() => setIsModalOpen(true)} className="bg-indigo-600 hover:bg-indigo-700 shadow-sm text-base py-2.5">
+        <Button onClick={() => setIsModalOpen(true)} className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white shadow-md hover:shadow-lg hover:shadow-indigo-500/30 transition-all duration-300 hover:scale-[1.02] active:scale-95 text-base py-2.5">
           <Plus className="w-5 h-5 mr-2" />
           เพิ่มหลักสูตรใหม่
         </Button>
@@ -100,11 +100,11 @@ export default function TrainingPage() {
             const enrolled = course.employee_trainings ? course.employee_trainings.length : 0;
             
             return (
-              <div key={course.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden relative group hover:shadow-md transition-shadow">
+              <div key={course.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl hover:shadow-indigo-900/5 hover:-translate-y-1 transition-all duration-300 relative group">
                 
                 <button 
                   onClick={() => handleDelete(course.id)} 
-                  className="absolute top-4 right-4 p-2 bg-white text-red-600 hover:bg-red-50 rounded-full shadow-sm border border-gray-200 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                  className="absolute top-4 right-4 p-2.5 bg-white text-red-500 hover:bg-red-50 hover:text-red-700 hover:scale-110 active:scale-95 rounded-full shadow-sm border border-gray-200 opacity-0 group-hover:opacity-100 transition-all duration-200 z-10"
                   title="ลบหลักสูตร"
                 >
                   <Trash2 className="w-4 h-4" />

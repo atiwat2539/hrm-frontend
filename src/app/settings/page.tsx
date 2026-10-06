@@ -88,32 +88,32 @@ export default function SettingsPage() {
 
       <div className="flex flex-col md:flex-row gap-6">
         {/* Sidebar Tabs */}
-        <div className="w-full md:w-64 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden h-fit flex-shrink-0">
+        <div className="w-full md:w-64 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden h-fit flex-shrink-0">
           <ul className="divide-y divide-gray-100">
             <li>
               <button 
                 onClick={() => setActiveTab('profile')}
-                className={`w-full flex items-center px-5 py-4 text-left transition-colors ${activeTab === 'profile' ? 'bg-indigo-50 border-l-4 border-indigo-600 text-indigo-700 font-medium' : 'hover:bg-gray-50 text-gray-700 border-l-4 border-transparent'}`}
+                className={`w-full flex items-center px-5 py-4 text-left transition-all duration-300 group ${activeTab === 'profile' ? 'bg-indigo-50 border-l-4 border-indigo-600 text-indigo-700 font-medium' : 'hover:bg-gray-50 text-gray-700 border-l-4 border-transparent hover:pl-6'}`}
               >
-                <User className={`w-5 h-5 mr-3 ${activeTab === 'profile' ? 'text-indigo-600' : 'text-gray-400'}`} />
+                <User className={`w-5 h-5 mr-3 transition-transform duration-300 ${activeTab === 'profile' ? 'text-indigo-600 scale-110' : 'text-gray-400 group-hover:scale-110'}`} />
                 ข้อมูลผู้ใช้งาน (Profile)
               </button>
             </li>
             <li>
               <button 
                 onClick={() => setActiveTab('notifications')}
-                className={`w-full flex items-center px-5 py-4 text-left transition-colors ${activeTab === 'notifications' ? 'bg-indigo-50 border-l-4 border-indigo-600 text-indigo-700 font-medium' : 'hover:bg-gray-50 text-gray-700 border-l-4 border-transparent'}`}
+                className={`w-full flex items-center px-5 py-4 text-left transition-all duration-300 group ${activeTab === 'notifications' ? 'bg-indigo-50 border-l-4 border-indigo-600 text-indigo-700 font-medium' : 'hover:bg-gray-50 text-gray-700 border-l-4 border-transparent hover:pl-6'}`}
               >
-                <Bell className={`w-5 h-5 mr-3 ${activeTab === 'notifications' ? 'text-indigo-600' : 'text-gray-400'}`} />
+                <Bell className={`w-5 h-5 mr-3 transition-transform duration-300 ${activeTab === 'notifications' ? 'text-indigo-600 scale-110' : 'text-gray-400 group-hover:scale-110'}`} />
                 การแจ้งเตือน (Notifications)
               </button>
             </li>
             <li>
               <button 
                 onClick={() => setActiveTab('security')}
-                className={`w-full flex items-center px-5 py-4 text-left transition-colors ${activeTab === 'security' ? 'bg-indigo-50 border-l-4 border-indigo-600 text-indigo-700 font-medium' : 'hover:bg-gray-50 text-gray-700 border-l-4 border-transparent'}`}
+                className={`w-full flex items-center px-5 py-4 text-left transition-all duration-300 group ${activeTab === 'security' ? 'bg-indigo-50 border-l-4 border-indigo-600 text-indigo-700 font-medium' : 'hover:bg-gray-50 text-gray-700 border-l-4 border-transparent hover:pl-6'}`}
               >
-                <Shield className={`w-5 h-5 mr-3 ${activeTab === 'security' ? 'text-indigo-600' : 'text-gray-400'}`} />
+                <Shield className={`w-5 h-5 mr-3 transition-transform duration-300 ${activeTab === 'security' ? 'text-indigo-600 scale-110' : 'text-gray-400 group-hover:scale-110'}`} />
                 ความปลอดภัยระบบ (Security)
               </button>
             </li>
@@ -121,21 +121,21 @@ export default function SettingsPage() {
         </div>
 
         {/* Content Area */}
-        <div className="flex-1 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div className="flex-1 bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           
           {activeTab === 'profile' && (
             <div className="space-y-6">
               <h2 className="text-xl font-bold text-gray-900 border-b pb-4">ตั้งค่าข้อมูลบัญชีผู้ใช้</h2>
               
               {message && (
-                <div className="bg-emerald-50 text-emerald-700 p-4 rounded-lg border border-emerald-200 flex items-center">
+                <div className="bg-emerald-50 text-emerald-700 p-4 rounded-xl border border-emerald-200 flex items-center">
                   <CheckCircle2 className="w-5 h-5 mr-2" />
                   {message}
                 </div>
               )}
 
               {error && (
-                <div className="bg-red-50 text-red-700 p-4 rounded-lg border border-red-200">
+                <div className="bg-red-50 text-red-700 p-4 rounded-xl border border-red-200">
                   {error}
                 </div>
               )}
@@ -148,7 +148,7 @@ export default function SettingsPage() {
                     type="text" 
                     value={profileData.username}
                     onChange={e => setProfileData({...profileData, username: e.target.value})}
-                    className="w-full border border-gray-300 rounded-lg px-4 py-2.5 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors" 
+                    className="w-full border border-gray-300 rounded-xl px-4 py-2.5 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors" 
                   />
                 </div>
                 <div>
@@ -158,7 +158,7 @@ export default function SettingsPage() {
                     type="email" 
                     value={profileData.email}
                     onChange={e => setProfileData({...profileData, email: e.target.value})}
-                    className="w-full border border-gray-300 rounded-lg px-4 py-2.5 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors" 
+                    className="w-full border border-gray-300 rounded-xl px-4 py-2.5 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors" 
                   />
                 </div>
                 
@@ -176,7 +176,7 @@ export default function SettingsPage() {
                         type="password" 
                         value={profileData.password}
                         onChange={e => setProfileData({...profileData, password: e.target.value})}
-                        className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors" 
+                        className="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors" 
                         placeholder="••••••••"
                       />
                     </div>
@@ -186,7 +186,7 @@ export default function SettingsPage() {
                         type="password" 
                         value={profileData.confirmPassword}
                         onChange={e => setProfileData({...profileData, confirmPassword: e.target.value})}
-                        className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors" 
+                        className="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors" 
                         placeholder="••••••••"
                       />
                     </div>
@@ -194,7 +194,7 @@ export default function SettingsPage() {
                 </div>
 
                 <div className="pt-6">
-                  <Button type="submit" disabled={loading} className="bg-indigo-600 hover:bg-indigo-700 px-8 py-2.5 shadow-sm text-base">
+                  <Button type="submit" disabled={loading} className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white shadow-md hover:shadow-lg hover:shadow-indigo-500/30 transition-all duration-300 hover:scale-[1.02] active:scale-95 px-8 py-2.5 text-base">
                     <Save className="w-5 h-5 mr-2" />
                     {loading ? 'กำลังบันทึก...' : 'บันทึกการเปลี่ยนแปลง'}
                   </Button>

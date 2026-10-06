@@ -208,29 +208,29 @@ export default function KpiPage() {
           <h1 className="text-2xl font-bold text-gray-900">Workload & KPI Management</h1>
           <p className="text-sm text-gray-500">มอบหมายภาระงานรายบุคคลและอัปเดตตัวเลขแบบสะสมยอด</p>
         </div>
-        <Button onClick={handleOpenModalForCreate} className="bg-indigo-600 hover:bg-indigo-700">
-          <Target className="w-4 h-4 mr-2" />
+        <Button onClick={handleOpenModalForCreate} className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white whitespace-nowrap px-5 py-2.5 rounded-lg shadow-md hover:shadow-lg hover:shadow-indigo-500/30 transition-all duration-300 hover:scale-[1.02] active:scale-95">
+          <Target className="w-5 h-5 mr-2" />
           มอบหมายภาระงาน
         </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 flex items-center space-x-4">
-          <div className="p-3 bg-blue-100 rounded-full text-blue-600"><Target className="w-6 h-6" /></div>
+        <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center space-x-4 hover:shadow-xl hover:shadow-indigo-900/5 hover:-translate-y-1 transition-all duration-300 group">
+          <div className="p-3 bg-blue-50 rounded-full text-blue-600 group-hover:bg-blue-500 group-hover:text-white transition-all duration-300 group-hover:shadow-lg group-hover:shadow-blue-500/30 group-hover:scale-110"><Target className="w-6 h-6" /></div>
           <div>
             <p className="text-sm text-gray-500">ภาระงานทั้งหมด (Total)</p>
             <p className="text-2xl font-bold text-gray-900">{totalKpis}</p>
           </div>
         </div>
-        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 flex items-center space-x-4">
-          <div className="p-3 bg-green-100 rounded-full text-green-600"><TrendingUp className="w-6 h-6" /></div>
+        <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center space-x-4 hover:shadow-xl hover:shadow-emerald-900/5 hover:-translate-y-1 transition-all duration-300 group">
+          <div className="p-3 bg-emerald-50 rounded-full text-emerald-600 group-hover:bg-emerald-500 group-hover:text-white transition-all duration-300 group-hover:shadow-lg group-hover:shadow-emerald-500/30 group-hover:scale-110"><TrendingUp className="w-6 h-6" /></div>
           <div>
             <p className="text-sm text-gray-500">สำเร็จตามเป้า (Achieved)</p>
             <p className="text-2xl font-bold text-gray-900">{achieved}</p>
           </div>
         </div>
-        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 flex items-center space-x-4">
-          <div className="p-3 bg-orange-100 rounded-full text-orange-600"><AlertTriangle className="w-6 h-6" /></div>
+        <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center space-x-4 hover:shadow-xl hover:shadow-orange-900/5 hover:-translate-y-1 transition-all duration-300 group">
+          <div className="p-3 bg-orange-50 rounded-full text-orange-600 group-hover:bg-orange-500 group-hover:text-white transition-all duration-300 group-hover:shadow-lg group-hover:shadow-orange-500/30 group-hover:scale-110"><AlertTriangle className="w-6 h-6" /></div>
           <div>
             <p className="text-sm text-gray-500">ต่ำกว่าเป้า (Below Target)</p>
             <p className="text-2xl font-bold text-gray-900">{belowTarget}</p>

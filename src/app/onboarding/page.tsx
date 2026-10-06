@@ -182,7 +182,7 @@ export default function OnboardingPage() {
           <h1 className="text-2xl font-bold text-gray-900">Employee Onboarding</h1>
           <p className="text-sm text-gray-500 mt-1">ติดตามและจัดการความคืบหน้าการเริ่มงานของพนักงานใหม่</p>
         </div>
-        <Button onClick={() => setIsModalOpen(true)} className="bg-indigo-600 hover:bg-indigo-700 shadow-sm text-base py-2.5">
+        <Button onClick={() => setIsModalOpen(true)} className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white shadow-md hover:shadow-lg hover:shadow-indigo-500/30 transition-all duration-300 hover:scale-[1.02] active:scale-95 text-base py-2.5">
           <Plus className="w-5 h-5 mr-2" />
           สร้างแผนปฐมนิเทศใหม่
         </Button>
@@ -193,7 +193,7 @@ export default function OnboardingPage() {
       ) : processes.length > 0 ? (
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
           {processes.map((process) => (
-            <div key={process.id} className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+            <div key={process.id} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-xl hover:shadow-indigo-900/5 hover:-translate-y-1 transition-all duration-300">
               <div className="flex justify-between items-start mb-4">
                 <div>
                   <h3 className="text-lg font-bold text-gray-900">{process.employee.first_name} {process.employee.last_name}</h3>
@@ -217,20 +217,20 @@ export default function OnboardingPage() {
               <div className="space-y-3">
                 <div className="flex justify-between items-center mb-3">
                   <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wider">รายการที่ต้องทำ (Checklist)</h4>
-                  <button onClick={() => openTaskModal(process.id)} className="text-xs font-medium text-indigo-600 hover:text-indigo-800 bg-indigo-50 px-2 py-1 rounded-md flex items-center">
+                  <button onClick={() => openTaskModal(process.id)} className="text-xs font-medium text-indigo-600 hover:text-white bg-indigo-50 hover:bg-indigo-600 px-3 py-1.5 rounded-lg flex items-center transition-all duration-300 hover:shadow-md">
                     <Plus className="w-3 h-3 mr-1" /> เพิ่มรายการ
                   </button>
                 </div>
                 {process.tasks.map((task) => (
-                  <div key={task.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 bg-gray-50 rounded-lg border border-gray-100 transition-colors hover:border-gray-200 gap-3">
+                  <div key={task.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 bg-gray-50/50 rounded-xl border border-gray-100 transition-all duration-300 hover:border-indigo-200 hover:bg-indigo-50/30 hover:shadow-sm gap-3 group">
                     <div className="flex items-start space-x-3 flex-1">
-                      <div className="mt-0.5">
+                      <div className="mt-0.5 group-hover:scale-110 transition-transform duration-300">
                         {task.status === 'completed' && <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0" />}
                         {task.status === 'in_progress' && <Clock className="w-5 h-5 text-amber-500 flex-shrink-0" />}
                         {task.status === 'not_started' && <AlertCircle className="w-5 h-5 text-gray-400 flex-shrink-0" />}
                       </div>
                       <div className="flex-1">
-                        <span className={`text-sm font-medium ${task.status === 'completed' ? 'text-gray-400 line-through' : 'text-gray-800'}`}>
+                        <span className={`text-sm font-medium transition-colors ${task.status === 'completed' ? 'text-gray-400 line-through' : 'text-gray-800 group-hover:text-indigo-900'}`}>
                           {task.task_name}
                         </span>
                         {(task.due_date || task.responsible_person) && (

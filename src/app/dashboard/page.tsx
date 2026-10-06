@@ -100,14 +100,14 @@ export default function DashboardPage() {
         {stats.map((stat) => {
           const Icon = stat.icon;
           return (
-            <div key={stat.name} className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+            <div key={stat.name} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-xl hover:shadow-indigo-900/5 hover:-translate-y-1 transition-all duration-300 group cursor-default">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-500 truncate">{stat.name}</p>
                   <p className="mt-2 text-3xl font-semibold text-gray-900">{stat.value}</p>
                 </div>
-                <div className="p-3 bg-indigo-50 rounded-full">
-                  <Icon className="w-6 h-6 text-indigo-600" />
+                <div className="p-3 bg-indigo-50 rounded-full group-hover:bg-indigo-600 group-hover:shadow-lg group-hover:shadow-indigo-500/30 transition-all duration-300">
+                  <Icon className="w-6 h-6 text-indigo-600 group-hover:text-white transition-colors duration-300 group-hover:scale-110" />
                 </div>
               </div>
               <div className="mt-4">
@@ -120,7 +120,7 @@ export default function DashboardPage() {
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Personnel Growth Chart */}
-        <div className="lg:col-span-2 bg-white p-6 rounded-lg shadow-sm border border-gray-200 min-h-[400px]">
+        <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-xl hover:shadow-indigo-900/5 transition-all duration-300 min-h-[400px]">
           <h3 className="text-lg font-semibold text-gray-800 mb-4">การเติบโตของจำนวนพนักงาน (6 เดือนที่ผ่านมา)</h3>
           <div className="h-[320px] w-full">
             <ResponsiveContainer width="100%" height="100%">
@@ -139,7 +139,7 @@ export default function DashboardPage() {
                   stroke="#4f46e5" 
                   strokeWidth={3}
                   dot={{ r: 4, strokeWidth: 2 }}
-                  activeDot={{ r: 6 }} 
+                  activeDot={{ r: 8, strokeWidth: 0, fill: '#4f46e5' }} 
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -147,7 +147,7 @@ export default function DashboardPage() {
         </div>
 
         {/* KPI Distribution Chart */}
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 min-h-[400px]">
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-xl hover:shadow-indigo-900/5 transition-all duration-300 min-h-[400px]">
           <h3 className="text-lg font-semibold text-gray-800 mb-4">สัดส่วนสถานะ KPI</h3>
           <div className="h-[320px] w-full">
             {kpiData.every((d: any) => d.value === 0) ? (
@@ -167,7 +167,7 @@ export default function DashboardPage() {
                     dataKey="value"
                   >
                     {kpiData.map((entry: any, index: number) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} className="hover:opacity-80 transition-opacity duration-300 outline-none" />
                     ))}
                   </Pie>
                   <Tooltip 
@@ -184,7 +184,7 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 gap-6">
         {/* Individual KPI Achievement Bar Chart */}
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 min-h-[400px]">
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-xl hover:shadow-indigo-900/5 transition-all duration-300 min-h-[400px]">
           <h3 className="text-lg font-semibold text-gray-800 mb-4">ความสำเร็จ KPI รายบุคคล (10 อันดับแรก)</h3>
           <div className="h-[320px] w-full">
             {!individualKpiData || individualKpiData.length === 0 ? (

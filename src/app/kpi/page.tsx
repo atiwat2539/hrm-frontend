@@ -305,7 +305,9 @@ export default function KpiPage() {
             <table className="w-full text-sm text-left text-gray-600 border-collapse">
               <thead className="text-xs text-gray-800 bg-indigo-50/50 border-b border-gray-200">
                 <tr>
-                  <th className="px-3 py-3 font-semibold border-r border-gray-200 min-w-[200px]">หัวข้อ KPI</th>
+                  <th className="px-3 py-3 font-semibold border-r border-gray-200">พนักงาน</th>
+                  <th className="px-3 py-3 font-semibold border-r border-gray-200">หัวข้อย่อย (Sub Topic)</th>
+                  <th className="px-3 py-3 font-semibold border-r border-gray-200 min-w-[200px]">รายละเอียดภาระงาน</th>
                   <th className="px-2 py-3 font-semibold text-center border-r border-gray-200">มิ.ย.</th>
                   <th className="px-2 py-3 font-semibold text-center border-r border-gray-200">ก.ค.</th>
                   <th className="px-2 py-3 font-semibold text-center border-r border-gray-200">ส.ค.</th>
@@ -323,25 +325,19 @@ export default function KpiPage() {
                 </tr>
               </thead>
               <tbody>
-                {filteredKpis.length === 0 ? (
-                  <tr><td colSpan={15} className="text-center py-4">ไม่มีข้อมูลภาระงาน</td></tr>
+                {Object.keys(groupedKpis).length === 0 ? (
+                  <tr><td colSpan={17} className="text-center py-4">ไม่มีข้อมูลภาระงาน</td></tr>
                 ) : (
-                  // Group by Employee for Matrix View
-                  Object.entries(filteredKpis.reduce((acc, kpi) => {
-                    const empName = kpi.employee ? `${kpi.employee.first_name} ${kpi.employee.last_name}` : `ID: ${kpi.employee_id}`;
-                    if (!acc[empName]) acc[empName] = [];
-                    acc[empName].push(kpi);
-                    return acc;
-                  }, {} as Record<string, any[]>) as any).map((entry: any) => {
-                    const [empName, empKpis] = entry;
+                  (Object.entries(groupedKpis) as any).map((entry: any) => {
+                    const [mainTopic, topicKpis] = entry;
                     return (
-                    <Fragment key={empName}>
-                      <tr className="bg-slate-100 border-b border-gray-200">
-                        <td colSpan={15} className="px-3 py-2 font-bold text-slate-800">
-                          พนักงาน: {empName}
+                    <Fragment key={mainTopic}>
+                      <tr className="bg-indigo-50 border-b border-indigo-200">
+                        <td colSpan={17} className="px-4 py-3 font-bold text-indigo-900 text-[15px]">
+                          หัวข้อหลัก: {mainTopic}
                         </td>
                       </tr>
-                      {empKpis.map((kpi: any) => {
+                      {topicKpis.map((kpi: any) => {
                         // Calculate monthly sums for this Fiscal Year (Jun - May)
                         // Index: 0=Jun, 1=Jul, 2=Aug, 3=Sep, 4=Oct, 5=Nov, 6=Dec, 7=Jan, 8=Feb, 9=Mar, 10=Apr, 11=May
                         const monthlySums = Array(12).fill(0);
@@ -349,12 +345,10 @@ export default function KpiPage() {
                           kpi.results.forEach((r: any) => {
                             const monthInt = parseInt(r.month);
                             if (monthInt >= 6 && monthInt <= 12) {
-                              // Jun, Jul, ..., Dec belong to matrixYear - 1
                               if (r.year === matrixYear - 1) {
                                 monthlySums[monthInt - 6] += r.actual;
                               }
                             } else if (monthInt >= 1 && monthInt <= 5) {
-                              // Jan - May belong to matrixYear
                               if (r.year === matrixYear) {
                                 monthlySums[monthInt + 6] += r.actual;
                               }
@@ -366,9 +360,14 @@ export default function KpiPage() {
 
                         return (
                           <tr key={kpi.id} className="bg-white border-b hover:bg-gray-50">
-                            <td className="px-3 py-3 border-r border-gray-100">
-                              <div className="font-medium text-gray-900">{kpi.title}</div>
-                              <div className="text-xs text-gray-500 mt-0.5">{kpi.sub_title}</div>
+                            <td className="px-3 py-3 border-r border-gray-100 font-medium text-gray-900 whitespace-nowrap">
+                              {kpi.employee ? `${kpi.employee.first_name} ${kpi.employee.last_name}` : `ID: ${kpi.employee_id}`}
+                            </td>
+                            <td className="px-3 py-3 border-r border-gray-100 font-medium text-gray-800">
+                              {kpi.sub_title || '-'}
+                            </td>
+                            <td className="px-3 py-3 border-r border-gray-100 text-sm text-gray-500 whitespace-pre-wrap min-w-[200px]">
+                              {kpi.description}
                             </td>
                             {monthlySums.map((sum, idx) => (
                               <td key={idx} className="px-2 py-3 text-center border-r border-gray-100 text-gray-600">

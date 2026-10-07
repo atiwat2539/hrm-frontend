@@ -15,7 +15,8 @@ import {
   Settings,
   LogOut,
   X,
-  Shield
+  Shield,
+  Briefcase
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
@@ -26,6 +27,7 @@ interface SidebarProps {
 const menuItems = [
   { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
   { name: 'Personnel', path: '/personnel', icon: Users },
+  { name: 'Projects', path: '/projects', icon: Briefcase },
   { name: 'Onboarding', path: '/onboarding', icon: UserPlus },
   { name: 'KPIs', path: '/kpi', icon: Target },
   { name: 'Training', path: '/training', icon: GraduationCap },

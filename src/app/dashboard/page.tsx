@@ -267,6 +267,31 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {/* Project Progress Bars */}
+      <div className="bg-white p-8 rounded-3xl shadow-sm border border-[#F0EEE9] hover:shadow-xl transition-all duration-300">
+        <h3 className="text-xl font-bold text-gray-800 mb-6">ความก้าวหน้าของโครงการ (Projects)</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {!dashboardData?.projects || dashboardData.projects.length === 0 ? (
+            <div className="text-center text-gray-400 py-4 col-span-full">ไม่มีข้อมูลโครงการ</div>
+          ) : (
+            dashboardData.projects.map((proj: any, idx: number) => (
+              <div key={idx} className="flex flex-col gap-2">
+                <div className="flex justify-between items-center text-sm font-semibold text-gray-700">
+                  <span className="truncate pr-4">{proj.name}</span>
+                  <span className="text-indigo-600">{proj.progress}%</span>
+                </div>
+                <div className="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden shadow-inner">
+                  <div 
+                    className="h-2.5 rounded-full transition-all duration-1000 bg-indigo-500"
+                    style={{ width: `${proj.progress}%` }}
+                  ></div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
       {/* Event Details Modal */}
       {isModalOpen && selectedEvent && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">

@@ -14,8 +14,30 @@ export default function DashboardPage() {
   const [user, setUser] = useState<any>(null);
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [weather, setWeather] = useState<{ temp: number, text: string, icon: string } | null>(null);
 
   useEffect(() => {
+    const fetchWeather = async () => {
+      try {
+        const res = await axios.get('https://api.open-meteo.com/v1/forecast?latitude=13.75&longitude=100.5167&current_weather=true');
+        const code = res.data.current_weather.weathercode;
+        const temp = res.data.current_weather.temperature;
+        
+        let icon = '☀️';
+        let text = 'แจ่มใส';
+        
+        if (code >= 1 && code <= 3) { icon = '⛅'; text = 'มีเมฆบางส่วน'; }
+        else if (code >= 45 && code <= 48) { icon = '🌫️'; text = 'มีหมอก'; }
+        else if (code >= 51 && code <= 67) { icon = '🌧️'; text = 'มีฝนตก'; }
+        else if (code >= 80 && code <= 82) { icon = '🌦️'; text = 'ฝนตกปรอยๆ'; }
+        else if (code >= 95) { icon = '⛈️'; text = 'ฝนฟ้าคะนอง'; }
+        
+        setWeather({ temp, text, icon });
+      } catch (e) {
+        console.error('Weather fetch error', e);
+      }
+    };
+
     const fetchDashboardStats = async () => {
       try {
         const token = localStorage.getItem('token');
@@ -35,6 +57,7 @@ export default function DashboardPage() {
       }
     };
 
+    fetchWeather();
     fetchDashboardStats();
   }, []);
 
@@ -91,8 +114,16 @@ export default function DashboardPage() {
           <h1 className="text-3xl font-extrabold text-gray-800 tracking-tight">สวัสดี, {user?.username || 'ผู้ใช้งาน'}</h1>
           <p className="text-sm text-gray-600 mt-1">ภาพรวมการปฏิบัติงาน</p>
         </div>
-        <div className="bg-white/80 backdrop-blur px-5 py-2.5 rounded-2xl shadow-sm border border-[#F0EEE9] text-gray-700 font-medium">
-          {new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' })}
+        <div className="flex flex-wrap gap-3">
+          {weather && (
+            <div className="bg-white/80 backdrop-blur px-5 py-2.5 rounded-2xl shadow-sm border border-[#F0EEE9] text-gray-700 font-medium flex items-center gap-2 transition-all hover:scale-105 cursor-default">
+              <span className="text-xl drop-shadow-sm">{weather.icon}</span>
+              <span>{weather.temp}°C <span className="text-sm text-gray-500 ml-1">{weather.text}</span></span>
+            </div>
+          )}
+          <div className="bg-white/80 backdrop-blur px-5 py-2.5 rounded-2xl shadow-sm border border-[#F0EEE9] text-gray-700 font-medium flex items-center">
+            {new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' })}
+          </div>
         </div>
       </div>
 

@@ -27,11 +27,11 @@ interface SidebarProps {
 const menuItems = [
   { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
   { name: 'Personnel', path: '/personnel', icon: Users },
-  { name: 'Projects', path: '/projects', icon: Briefcase },
-  { name: 'Onboarding', path: '/onboarding', icon: UserPlus },
   { name: 'KPIs', path: '/kpi', icon: Target },
-  { name: 'Training', path: '/training', icon: GraduationCap },
+  { name: 'Projects', path: '/projects', icon: Briefcase },
   { name: 'Calendar', path: '/calendar', icon: Calendar },
+  { name: 'Training', path: '/training', icon: GraduationCap },
+  { name: 'Onboarding', path: '/onboarding', icon: UserPlus },
   { name: 'Reports', path: '/reports', icon: FileText },
   { name: 'Notifications', path: '/notifications', icon: Bell },
   { name: 'Settings', path: '/settings', icon: Settings },
@@ -123,10 +123,10 @@ export default function Sidebar({ onClose }: SidebarProps) {
       <div className="p-4 border-t border-white/40">
         <button 
           onClick={handleLogout}
-          className="w-full flex items-center space-x-3 text-gray-600 hover:text-red-600 cursor-pointer transition-all duration-300 px-4 py-3 rounded-lg hover:bg-white/50 hover:scale-[1.02] group"
+          className="w-full flex items-center justify-center space-x-3 bg-gradient-to-r from-red-500 to-rose-600 text-white cursor-pointer transition-all duration-300 px-4 py-3 rounded-xl hover:from-red-600 hover:to-rose-700 hover:shadow-lg hover:shadow-red-500/30 hover:scale-[1.02] group"
         >
-          <LogOut className="w-5 h-5 transition-transform duration-300 group-hover:scale-110 group-hover:text-red-600" />
-          <span className="group-hover:text-red-600 transition-colors font-medium">Logout</span>
+          <LogOut className="w-5 h-5 transition-transform duration-300 group-hover:scale-110" />
+          <span className="font-bold">Logout</span>
         </button>
       </div>
     </aside>

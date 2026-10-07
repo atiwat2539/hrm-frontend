@@ -263,7 +263,6 @@ export default function KpiPage() {
           </div>
           
           <div className="flex items-center space-x-3">
-            {viewMode === 'matrix' && (
               <div className="flex items-center space-x-2 mr-2">
                 <label className="text-sm font-medium text-gray-700">รอบปี:</label>
                 <select 
@@ -279,7 +278,6 @@ export default function KpiPage() {
                   })}
                 </select>
               </div>
-            )}
             <div className="flex items-center space-x-2">
               <label className="text-sm font-medium text-gray-700">เลือกบุคลากร:</label>
               <select 
@@ -416,7 +414,30 @@ export default function KpiPage() {
                           หัวข้อหลัก: {mainTopic}
                         </td>
                       </tr>
-                      {topicKpis.map((kpi: any) => (
+                      {topicKpis.map((kpi: any) => {
+                        let fyTotal = 0;
+                        if (kpi.results) {
+                          kpi.results.forEach((r: any) => {
+                            const monthInt = parseInt(r.month);
+                            if (monthInt >= 6 && monthInt <= 12) {
+                              if (r.year === matrixYear - 1) fyTotal += r.actual;
+                            } else if (monthInt >= 1 && monthInt <= 5) {
+                              if (r.year === matrixYear) fyTotal += r.actual;
+                            }
+                          });
+                        }
+                        
+                        const isAchieved = fyTotal >= kpi.target;
+                        const statusLabel = isAchieved ? 'สำเร็จ' : (fyTotal > 0 ? 'กำลังดำเนินการ' : 'ยังไม่เริ่ม/ต่ำกว่าเป้า');
+                        const statusClass = isAchieved ? 'bg-green-100 text-green-800' : (fyTotal > 0 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800');
+
+                        const yearResults = (kpi.results || []).filter((r: any) => {
+                            const monthInt = parseInt(r.month);
+                            return (monthInt >= 6 && monthInt <= 12 && r.year === matrixYear - 1) ||
+                                   (monthInt >= 1 && monthInt <= 5 && r.year === matrixYear);
+                        });
+
+                        return (
                         <tr key={kpi.id} className="bg-white border-b hover:bg-gray-50">
                           <td className="px-4 py-4 font-medium text-gray-900">
                             {kpi.employee ? `${kpi.employee.first_name} ${kpi.employee.last_name}` : `ID: ${kpi.employee_id}`}
@@ -436,13 +457,13 @@ export default function KpiPage() {
                           {/* Accumulated Total */}
                           <td className="px-4 py-4">
                             <div className="flex flex-col items-start">
-                              <span className="font-bold text-indigo-600 text-lg">{kpi.actual || 0}</span>
-                              {kpi.results && kpi.results.length > 0 && (
+                              <span className="font-bold text-indigo-600 text-lg">{fyTotal}</span>
+                              {yearResults.length > 0 && (
                                 <button 
-                                  onClick={() => { setSelectedKpiHistory(kpi); setIsHistoryModalOpen(true); }}
+                                  onClick={() => { setSelectedKpiHistory({...kpi, results: yearResults}); setIsHistoryModalOpen(true); }}
                                   className="text-xs text-blue-600 hover:text-blue-800 hover:underline mt-1 font-medium bg-blue-50 px-2 py-0.5 rounded"
                                 >
-                                  ดูประวัติ {kpi.results.length} รายการ
+                                  ดูประวัติ {yearResults.length} รายการ
                                 </button>
                               )}
                             </div>
@@ -450,12 +471,8 @@ export default function KpiPage() {
                           
                           <td className="px-4 py-4 text-gray-500">{kpi.unit}</td>
                           <td className="px-4 py-4">
-                            <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
-                              kpi.status === 'approved' ? 'bg-green-100 text-green-800' :
-                              kpi.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                              'bg-red-100 text-red-800'
-                            }`}>
-                              {kpi.status === 'approved' ? 'สำเร็จ' : kpi.status === 'pending' ? 'กำลังดำเนินการ' : 'ยังไม่เริ่ม/ต่ำกว่าเป้า'}
+                            <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${statusClass}`}>
+                              {statusLabel}
                             </span>
                           </td>
 
@@ -491,7 +508,8 @@ export default function KpiPage() {
                             </div>
                           </td>
                         </tr>
-                      ))}
+                      );
+                    })}
                     </Fragment>
                   )})
                 )}

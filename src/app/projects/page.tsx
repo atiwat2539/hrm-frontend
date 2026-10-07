@@ -262,54 +262,54 @@ export default function ProjectsPage() {
           <p className="text-gray-500">ไม่พบโครงการตามเงื่อนไขที่เลือก</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {filteredProjects.map(project => (
-            <div key={project.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition flex flex-col h-full">
-              <div className="flex justify-between items-start mb-3">
-                <h3 className="text-lg font-bold text-gray-900 line-clamp-2">{project.name}</h3>
+            <div key={project.id} className="bg-white rounded-3xl shadow-sm border border-gray-100 p-8 hover:shadow-md transition flex flex-col h-full">
+              <div className="flex justify-between items-start mb-4">
+                <h3 className="text-xl font-bold text-gray-900 line-clamp-2 pr-4">{project.name}</h3>
                 <div className="flex gap-2 shrink-0 ml-2">
-                  <button onClick={() => handleOpenEdit(project)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition"><Edit2 className="w-4 h-4" /></button>
-                  <button onClick={() => handleDelete(project.id)} className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition"><Trash2 className="w-4 h-4" /></button>
+                  <button onClick={() => handleOpenEdit(project)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-xl transition"><Edit2 className="w-5 h-5" /></button>
+                  <button onClick={() => handleDelete(project.id)} className="p-2 text-red-600 hover:bg-red-50 rounded-xl transition"><Trash2 className="w-5 h-5" /></button>
                 </div>
               </div>
               
               {project.type && (
-                <div className="inline-block bg-indigo-50 text-indigo-700 text-xs font-semibold px-2 py-1 rounded-md mb-3 w-max">
+                <div className="inline-block bg-indigo-50 text-indigo-700 text-sm font-semibold px-3 py-1.5 rounded-lg mb-4 w-max">
                   {project.type}
                 </div>
               )}
               
-              <p className="text-sm text-gray-600 mb-4 line-clamp-2">{project.description || '-'}</p>
+              <p className="text-base text-gray-600 mb-6 line-clamp-3">{project.description || '-'}</p>
               
-              <div className="mt-auto space-y-3 mb-4">
-                <div className="flex items-center text-xs text-gray-500 space-x-4">
-                  <div className="flex items-center"><User className="w-3.5 h-3.5 mr-1" /> {project.owner ? `${project.owner.first_name} ${project.owner.last_name}` : 'ไม่ระบุผู้ดูแล'}</div>
-                  <div className="flex items-center"><Tag className="w-3.5 h-3.5 mr-1" /> รอบปี {project.year ? project.year + 543 : '-'}</div>
+              <div className="mt-auto space-y-4 mb-6">
+                <div className="flex items-center text-sm text-gray-500 space-x-6">
+                  <div className="flex items-center"><User className="w-4 h-4 mr-1.5" /> {project.owner ? `${project.owner.first_name} ${project.owner.last_name}` : 'ไม่ระบุผู้ดูแล'}</div>
+                  <div className="flex items-center"><Tag className="w-4 h-4 mr-1.5" /> รอบปี {project.year ? project.year + 543 : '-'}</div>
                 </div>
                 
-                <div className="flex items-center text-xs text-gray-500 space-x-4">
-                  <div className="flex items-center"><Calendar className="w-3.5 h-3.5 mr-1" />สิ้นสุด: {project.end_date ? new Date(project.end_date).toLocaleDateString('th-TH') : '-'}</div>
+                <div className="flex items-center text-sm text-gray-500 space-x-6">
+                  <div className="flex items-center"><Calendar className="w-4 h-4 mr-1.5" />สิ้นสุด: {project.end_date ? new Date(project.end_date).toLocaleDateString('th-TH') : '-'}</div>
                   <div className="flex items-center">
-                    {project.status === 'completed' ? <CheckCircle2 className="w-3.5 h-3.5 mr-1 text-emerald-500" /> : <Clock className="w-3.5 h-3.5 mr-1 text-orange-500" />}
+                    {project.status === 'completed' ? <CheckCircle2 className="w-4 h-4 mr-1.5 text-emerald-500" /> : <Clock className="w-4 h-4 mr-1.5 text-orange-500" />}
                     {project.status === 'completed' ? 'เสร็จสิ้น' : project.status === 'in_progress' ? 'กำลังดำเนินการ' : project.status === 'on_hold' ? 'ระงับไว้' : 'ยังไม่เริ่ม'}
                   </div>
                 </div>
 
                 {project.checklists && project.checklists.length > 0 && (
-                  <div className="text-xs text-gray-500 flex items-center">
-                    <ListChecks className="w-3.5 h-3.5 mr-1" />
+                  <div className="text-sm text-gray-500 flex items-center font-medium bg-gray-50 p-2 rounded-lg w-fit">
+                    <ListChecks className="w-4 h-4 mr-1.5 text-indigo-500" />
                     เช็คลิสต์: {project.checklists.filter((c: any) => c.is_completed).length} / {project.checklists.length}
                   </div>
                 )}
               </div>
 
               <div>
-                <div className="flex justify-between text-xs font-medium mb-1">
+                <div className="flex justify-between text-sm font-medium mb-2">
                   <span className="text-gray-700">ความคืบหน้า</span>
-                  <span className="text-indigo-600">{project.progress}%</span>
+                  <span className="text-indigo-600 text-base">{project.progress}%</span>
                 </div>
-                <div className="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden shadow-inner">
-                  <div className="bg-indigo-600 h-2.5 rounded-full transition-all duration-1000" style={{ width: `${project.progress}%` }}></div>
+                <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden shadow-inner">
+                  <div className="bg-gradient-to-r from-indigo-500 to-violet-600 h-3 rounded-full transition-all duration-1000" style={{ width: `${project.progress}%` }}></div>
                 </div>
               </div>
             </div>

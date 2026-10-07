@@ -6,6 +6,7 @@ import axios from 'axios';
 import { Plus, Edit2, Trash2, Search, Mail, Phone, Briefcase, User as UserIcon, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
+import ImageCropperModal from '@/components/ui/ImageCropperModal';
 
 interface Employee {
   id: number;
@@ -33,6 +34,7 @@ export default function PersonnelPage() {
   const [currentEmployee, setCurrentEmployee] = useState<Partial<Employee>>({});
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
 
   const fetchEmployees = async () => {
     try {
@@ -144,6 +146,18 @@ export default function PersonnelPage() {
   );
 
   return (
+    <>
+      {cropImageSrc && (
+        <ImageCropperModal 
+          imageSrc={cropImageSrc} 
+          onCancel={() => setCropImageSrc(null)}
+          onCropComplete={(croppedFile, newPreviewUrl) => {
+            setSelectedFile(croppedFile);
+            setPreviewUrl(newPreviewUrl);
+            setCropImageSrc(null);
+          }} 
+        />
+      )}
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
         <div>
@@ -347,5 +361,6 @@ export default function PersonnelPage() {
         </div>
       )}
     </div>
+    </>
   );
 }

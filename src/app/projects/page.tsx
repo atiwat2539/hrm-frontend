@@ -2,16 +2,26 @@
 
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Plus, Edit2, Trash2, Calendar, CheckCircle2, Clock, X, User, Tag, ListChecks } from 'lucide-react';
+import { Plus, Edit2, Trash2, Calendar, CheckCircle2, Clock, X, User, Tag, ListChecks, Settings2 } from 'lucide-react';
 
 const API_URL = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/projects`;
 const EMP_API_URL = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/employees`;
+const TYPE_API_URL = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/project-types`;
 
 export default function ProjectsPage() {
   const [projects, setProjects] = useState<any[]>([]);
   const [employees, setEmployees] = useState<any[]>([]);
+  const [projectTypes, setProjectTypes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // Filtering
+  const [filterOwner, setFilterOwner] = useState('');
+  const [filterType, setFilterType] = useState('');
+
+  // Modals
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isTypeModalOpen, setIsTypeModalOpen] = useState(false);
+  
   const [isEditing, setIsEditing] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   
@@ -29,17 +39,24 @@ export default function ProjectsPage() {
   });
 
   const [newTaskName, setNewTaskName] = useState('');
+  
+  // Type Management Form
+  const [newTypeName, setNewTypeName] = useState('');
+  const [editingTypeId, setEditingTypeId] = useState<number | null>(null);
+  const [editTypeName, setEditTypeName] = useState('');
 
   const fetchData = async () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const [projRes, empRes] = await Promise.all([
+      const [projRes, empRes, typeRes] = await Promise.all([
         axios.get(API_URL, { headers: { Authorization: `Bearer ${token}` } }),
-        axios.get(EMP_API_URL, { headers: { Authorization: `Bearer ${token}` } })
+        axios.get(EMP_API_URL, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(TYPE_API_URL, { headers: { Authorization: `Bearer ${token}` } })
       ]);
       setProjects(projRes.data);
       setEmployees(empRes.data);
+      setProjectTypes(typeRes.data);
     } catch (error) {
       console.error('Failed to fetch data', error);
     } finally {
@@ -51,10 +68,15 @@ export default function ProjectsPage() {
     fetchData();
   }, []);
 
-  // Use Thai Year logic matching KPI page [2, 1, 0, -1, -2] mapping to year + 543
   const yearOptions = [2, 1, 0, -1, -2].map(offset => {
     const y = new Date().getFullYear() + offset;
     return { value: y, label: y + 543 };
+  });
+
+  const filteredProjects = projects.filter(p => {
+    const matchOwner = filterOwner ? p.owner_id?.toString() === filterOwner : true;
+    const matchType = filterType ? p.type === filterType : true;
+    return matchOwner && matchType;
   });
 
   const handleOpenCreate = () => {
@@ -91,9 +113,7 @@ export default function ProjectsPage() {
     if (!confirm('คุณแน่ใจหรือไม่ว่าต้องการลบโครงการนี้?')) return;
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`${API_URL}/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.delete(`${API_URL}/${id}`, { headers: { Authorization: `Bearer ${token}` } });
       fetchData();
     } catch (error) {
       alert('Failed to delete project');
@@ -141,13 +161,9 @@ export default function ProjectsPage() {
     try {
       const token = localStorage.getItem('token');
       if (isEditing && editingId) {
-        await axios.put(`${API_URL}/${editingId}`, formData, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await axios.put(`${API_URL}/${editingId}`, formData, { headers: { Authorization: `Bearer ${token}` } });
       } else {
-        await axios.post(API_URL, formData, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await axios.post(API_URL, formData, { headers: { Authorization: `Bearer ${token}` } });
       }
       setIsModalOpen(false);
       fetchData();
@@ -156,28 +172,98 @@ export default function ProjectsPage() {
     }
   };
 
+  // ---- Project Type Management ----
+  const handleAddType = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newTypeName.trim()) return;
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(TYPE_API_URL, { name: newTypeName }, { headers: { Authorization: `Bearer ${token}` } });
+      setNewTypeName('');
+      fetchData();
+    } catch (error) {
+      alert('Failed to add type or it already exists');
+    }
+  };
+
+  const handleUpdateType = async (id: number) => {
+    if (!editTypeName.trim()) return;
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(`${TYPE_API_URL}/${id}`, { name: editTypeName }, { headers: { Authorization: `Bearer ${token}` } });
+      setEditingTypeId(null);
+      setEditTypeName('');
+      fetchData();
+    } catch (error) {
+      alert('Failed to update type');
+    }
+  };
+
+  const handleDeleteType = async (id: number) => {
+    if (!confirm('ลบประเภทนี้? โครงการที่ใช้ประเภทนี้จะยังคงแสดงชื่อประเภทเดิมไว้')) return;
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`${TYPE_API_URL}/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+      fetchData();
+    } catch (error) {
+      alert('Failed to delete type');
+    }
+  };
+
   return (
     <div className="space-y-6 relative">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">จัดการโครงการ (Projects)</h1>
           <p className="text-sm text-gray-500">สร้าง ดู และแก้ไขรายการโครงการ พร้อมติดตามความคืบหน้าแบบละเอียด</p>
         </div>
-        <button onClick={handleOpenCreate} className="flex items-center bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-lg px-4 py-2 hover:scale-105 transition shadow-sm font-medium">
-          <Plus className="w-5 h-5 mr-2" />
-          เพิ่มโครงการ
-        </button>
+        <div className="flex items-center gap-3">
+          <button onClick={() => setIsTypeModalOpen(true)} className="flex items-center bg-white border border-gray-300 text-gray-700 rounded-lg px-4 py-2 hover:bg-gray-50 transition shadow-sm font-medium">
+            <Settings2 className="w-5 h-5 mr-2 text-gray-500" />
+            จัดการประเภท
+          </button>
+          <button onClick={handleOpenCreate} className="flex items-center bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-lg px-4 py-2 hover:scale-105 transition shadow-sm font-medium">
+            <Plus className="w-5 h-5 mr-2" />
+            เพิ่มโครงการ
+          </button>
+        </div>
+      </div>
+
+      <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex flex-col sm:flex-row gap-4 items-center">
+        <div className="w-full sm:w-1/3">
+          <label className="block text-xs font-medium text-gray-500 mb-1">กรองตามเจ้าของโครงการ</label>
+          <select className="w-full border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm p-2 border bg-gray-50" value={filterOwner} onChange={e => setFilterOwner(e.target.value)}>
+            <option value="">-- ดูทั้งหมด --</option>
+            {employees.map(emp => (
+              <option key={emp.id} value={emp.id}>{emp.first_name} {emp.last_name}</option>
+            ))}
+          </select>
+        </div>
+        <div className="w-full sm:w-1/3">
+          <label className="block text-xs font-medium text-gray-500 mb-1">กรองตามประเภทโครงการ</label>
+          <select className="w-full border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm p-2 border bg-gray-50" value={filterType} onChange={e => setFilterType(e.target.value)}>
+            <option value="">-- ดูทั้งหมด --</option>
+            {projectTypes.map(t => (
+              <option key={t.id} value={t.name}>{t.name}</option>
+            ))}
+          </select>
+        </div>
+        <div className="w-full sm:w-1/3 flex items-end">
+          <div className="text-sm text-gray-500 w-full text-right p-2">
+            พบ {filteredProjects.length} โครงการ
+          </div>
+        </div>
       </div>
 
       {loading ? (
         <p className="text-center py-10 text-gray-500">กำลังโหลด...</p>
-      ) : projects.length === 0 ? (
+      ) : filteredProjects.length === 0 ? (
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-10 text-center">
-          <p className="text-gray-500">ยังไม่มีโครงการในระบบ</p>
+          <p className="text-gray-500">ไม่พบโครงการตามเงื่อนไขที่เลือก</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {projects.map(project => (
+          {filteredProjects.map(project => (
             <div key={project.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition flex flex-col h-full">
               <div className="flex justify-between items-start mb-3">
                 <h3 className="text-lg font-bold text-gray-900 line-clamp-2">{project.name}</h3>
@@ -231,6 +317,7 @@ export default function ProjectsPage() {
         </div>
       )}
 
+      {/* Project Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
@@ -255,7 +342,12 @@ export default function ProjectsPage() {
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">ประเภทโครงการ</label>
-                      <input type="text" value={formData.type} onChange={e => setFormData({...formData, type: e.target.value})} placeholder="เช่น ไอที, การตลาด, วิจัย..." className="w-full border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2.5 border" />
+                      <select className="w-full border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2.5 border" value={formData.type} onChange={e => setFormData({...formData, type: e.target.value})}>
+                        <option value="">-- ไม่ระบุ --</option>
+                        {projectTypes.map(t => (
+                          <option key={t.id} value={t.name}>{t.name}</option>
+                        ))}
+                      </select>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">รอบปีโครงการ</label>
@@ -353,6 +445,61 @@ export default function ProjectsPage() {
             <div className="px-6 py-4 border-t border-gray-100 bg-gray-50 flex justify-end space-x-3 shrink-0">
               <button type="button" className="px-5 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 font-medium transition" onClick={() => setIsModalOpen(false)}>ยกเลิก</button>
               <button type="submit" form="project-form" className="px-5 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 rounded-lg text-white hover:shadow-lg hover:scale-105 transition font-medium">บันทึกโครงการ</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Type Management Modal */}
+      {isTypeModalOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+              <h2 className="text-xl font-bold text-gray-800">จัดการประเภทโครงการ</h2>
+              <button onClick={() => setIsTypeModalOpen(false)} className="text-gray-400 hover:text-gray-600 hover:bg-gray-200 p-1.5 rounded-full transition"><X className="w-5 h-5" /></button>
+            </div>
+            <div className="p-6">
+              <form onSubmit={handleAddType} className="flex gap-2 mb-6">
+                <input 
+                  type="text" 
+                  required
+                  value={newTypeName} 
+                  onChange={e => setNewTypeName(e.target.value)} 
+                  placeholder="ชื่อประเภทใหม่..." 
+                  className="flex-1 border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2.5 border" 
+                />
+                <button type="submit" className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 font-medium whitespace-nowrap shadow-sm">เพิ่ม</button>
+              </form>
+
+              <div className="space-y-2 max-h-60 overflow-y-auto">
+                {projectTypes.length === 0 ? (
+                  <p className="text-center text-sm text-gray-500 py-4">ยังไม่มีประเภทโครงการ</p>
+                ) : projectTypes.map(t => (
+                  <div key={t.id} className="flex items-center justify-between bg-gray-50 p-3 rounded-lg border border-gray-100">
+                    {editingTypeId === t.id ? (
+                      <div className="flex gap-2 w-full">
+                        <input 
+                          type="text" 
+                          autoFocus
+                          value={editTypeName} 
+                          onChange={e => setEditTypeName(e.target.value)} 
+                          className="flex-1 border-gray-300 rounded-md shadow-sm sm:text-sm p-1 border" 
+                        />
+                        <button onClick={() => handleUpdateType(t.id)} className="text-emerald-600 text-sm font-medium hover:bg-emerald-50 px-2 rounded">บันทึก</button>
+                        <button onClick={() => setEditingTypeId(null)} className="text-gray-500 text-sm font-medium hover:bg-gray-200 px-2 rounded">ยกเลิก</button>
+                      </div>
+                    ) : (
+                      <>
+                        <span className="text-sm font-medium text-gray-800">{t.name}</span>
+                        <div className="flex gap-1">
+                          <button onClick={() => { setEditingTypeId(t.id); setEditTypeName(t.name); }} className="p-1.5 text-blue-600 hover:bg-blue-100 rounded-md transition"><Edit2 className="w-4 h-4" /></button>
+                          <button onClick={() => handleDeleteType(t.id)} className="p-1.5 text-red-600 hover:bg-red-100 rounded-md transition"><Trash2 className="w-4 h-4" /></button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>

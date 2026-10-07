@@ -1,4 +1,5 @@
 'use client';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -89,7 +90,7 @@ export default function AdminPage() {
   };
 
   if (loading) {
-    return <div className="flex justify-center items-center h-64">กำลังโหลดข้อมูล...</div>;
+    return <LoadingSpinner />;
   }
 
   if (!isAdmin) return null;

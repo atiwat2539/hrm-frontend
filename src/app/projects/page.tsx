@@ -1,4 +1,5 @@
 'use client';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 import { useState, useEffect } from 'react';
 import axios from 'axios';
@@ -256,7 +257,7 @@ export default function ProjectsPage() {
       </div>
 
       {loading ? (
-        <p className="text-center py-10 text-gray-500">กำลังโหลด...</p>
+        <LoadingSpinner />
       ) : filteredProjects.length === 0 ? (
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-10 text-center">
           <p className="text-gray-500">ไม่พบโครงการตามเงื่อนไขที่เลือก</p>

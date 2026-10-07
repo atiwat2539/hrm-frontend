@@ -1,10 +1,11 @@
 'use client';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 import dynamic from 'next/dynamic';
 
 const CalendarClient = dynamic(() => import('@/components/CalendarClient'), { 
   ssr: false,
-  loading: () => <div className="h-[700px] flex items-center justify-center text-gray-500">Loading Calendar...</div>
+  loading: () => <LoadingSpinner />
 });
 
 export default function CalendarPage() {

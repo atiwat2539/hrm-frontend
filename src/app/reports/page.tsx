@@ -1,4 +1,5 @@
 'use client';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 import { useState, useEffect } from 'react';
 import axios from 'axios';
@@ -41,7 +42,7 @@ export default function ReportsPage() {
   };
 
   if (loading) {
-    return <div className="flex h-64 items-center justify-center text-gray-500">กำลังโหลดข้อมูลรายงาน...</div>;
+    return <LoadingSpinner />;
   }
 
   return (

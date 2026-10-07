@@ -1,4 +1,5 @@
 'use client';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 import { useState, useEffect } from 'react';
 import axios from 'axios';
@@ -189,7 +190,7 @@ export default function OnboardingPage() {
       </div>
 
       {loading ? (
-        <div className="flex justify-center p-12 text-gray-500">กำลังโหลดข้อมูล...</div>
+        <LoadingSpinner />
       ) : processes.length > 0 ? (
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
           {processes.map((process) => (

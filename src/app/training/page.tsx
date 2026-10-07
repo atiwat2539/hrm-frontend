@@ -1,4 +1,5 @@
 'use client';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 import { useState, useEffect } from 'react';
 import axios from 'axios';
@@ -91,7 +92,7 @@ export default function TrainingPage() {
       </div>
 
       {loading ? (
-        <div className="flex justify-center p-12 text-gray-500">กำลังโหลดข้อมูลหลักสูตร...</div>
+        <LoadingSpinner />
       ) : trainings.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {trainings.map((course) => {

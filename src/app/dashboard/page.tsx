@@ -1,4 +1,5 @@
 'use client';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 import { useState, useEffect } from 'react';
 import { Users, UserPlus, Target, Clock, X, MapPin, AlignLeft } from 'lucide-react';
@@ -63,9 +64,7 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="flex h-[400px] items-center justify-center">
-        <p className="text-gray-500">Loading Dashboard...</p>
-      </div>
+      <LoadingSpinner />
     );
   }
 

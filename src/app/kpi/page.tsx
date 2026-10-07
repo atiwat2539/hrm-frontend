@@ -1,4 +1,5 @@
 'use client';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 import { useState, useEffect, Fragment } from 'react';
 import { Target, TrendingUp, AlertTriangle, X, Plus, Edit2, Trash2 } from 'lucide-react';
@@ -298,7 +299,7 @@ export default function KpiPage() {
         
         <div className="overflow-x-auto">
           {loading ? (
-             <p className="text-center text-gray-500 py-4">กำลังโหลดข้อมูล...</p>
+             <LoadingSpinner />
           ) : viewMode === 'matrix' ? (
             <table className="w-full text-sm text-left text-gray-600 border-collapse">
               <thead className="text-xs text-gray-800 bg-indigo-50/50 border-b border-gray-200">

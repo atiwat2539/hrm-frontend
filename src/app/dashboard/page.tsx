@@ -88,7 +88,7 @@ export default function DashboardPage() {
     <div className="space-y-6 bg-gradient-to-br from-[#F0EEE9]/50 to-white p-6 rounded-3xl min-h-[calc(100vh-100px)]">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold text-gray-800 tracking-tight">สวัสดี, {user?.first_name || 'ผู้ใช้งาน'}</h1>
+          <h1 className="text-3xl font-extrabold text-gray-800 tracking-tight">สวัสดี, {user?.username || 'ผู้ใช้งาน'}</h1>
           <p className="text-sm text-gray-600 mt-1">ภาพรวมการปฏิบัติงาน</p>
         </div>
         <div className="bg-white/80 backdrop-blur px-5 py-2.5 rounded-2xl shadow-sm border border-[#F0EEE9] text-gray-700 font-medium">

@@ -85,8 +85,9 @@ export default function PersonnelPage() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      setSelectedFile(file);
-      setPreviewUrl(URL.createObjectURL(file));
+      const objectUrl = URL.createObjectURL(file);
+      setCropImageSrc(objectUrl);
+      e.target.value = '';
     }
   };
 

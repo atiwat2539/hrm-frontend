@@ -70,7 +70,7 @@ export default function ReportsPage() {
             <div className="bg-indigo-50 p-2 rounded-lg mr-3">
               <Users className="w-5 h-5 text-indigo-600" />
             </div>
-            <h2 className="text-lg font-bold text-gray-800">สัดส่วนพนักงานตามแผนก</h2>
+            <h2 className="text-lg font-bold text-gray-800">สัดส่วนบุคลากรตามแผนก</h2>
           </div>
           <div className="h-[300px]">
             {data.deptDistribution.length > 0 ? (
@@ -90,7 +90,7 @@ export default function ReportsPage() {
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} className="hover:opacity-80 transition-opacity duration-300 outline-none cursor-pointer" />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(value) => [`${value} คน`, 'จำนวนพนักงาน']} />
+                  <Tooltip formatter={(value) => [`${value} คน`, 'จำนวนบุคลากร']} />
                   <Legend />
                 </PieChart>
               </ResponsiveContainer>

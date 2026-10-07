@@ -281,7 +281,7 @@ export default function KpiPage() {
               </div>
             )}
             <div className="flex items-center space-x-2">
-              <label className="text-sm font-medium text-gray-700">เลือกพนักงาน:</label>
+              <label className="text-sm font-medium text-gray-700">เลือกบุคลากร:</label>
               <select 
                 value={selectedEmployeeFilter} 
                 onChange={e => setSelectedEmployeeFilter(e.target.value)}
@@ -305,7 +305,7 @@ export default function KpiPage() {
             <table className="w-full text-sm text-left text-gray-600 border-collapse">
               <thead className="text-xs text-gray-800 bg-indigo-50/50 border-b border-gray-200">
                 <tr>
-                  <th className="px-3 py-3 font-semibold border-r border-gray-200">พนักงาน</th>
+                  <th className="px-3 py-3 font-semibold border-r border-gray-200">บุคลากร</th>
                   <th className="px-3 py-3 font-semibold border-r border-gray-200">หัวข้อย่อย (Sub Topic)</th>
                   <th className="px-3 py-3 font-semibold border-r border-gray-200 min-w-[200px]">รายละเอียดภาระงาน</th>
                   <th className="px-2 py-3 font-semibold text-center border-r border-gray-200">มิ.ย.</th>
@@ -392,7 +392,7 @@ export default function KpiPage() {
             <table className="w-full text-base text-left text-gray-600">
               <thead className="text-sm text-gray-800 uppercase bg-indigo-50/50 border-b border-gray-200">
                 <tr>
-                  <th className="px-4 py-4 font-semibold">พนักงาน</th>
+                  <th className="px-4 py-4 font-semibold">บุคลากร</th>
                   <th className="px-4 py-4 font-semibold">หัวข้อย่อย</th>
                   <th className="px-4 py-4 font-semibold">รอบ</th>
                   <th className="px-4 py-4 font-semibold">เป้าหมาย</th>
@@ -515,7 +515,7 @@ export default function KpiPage() {
               <div>
                 <label className="block text-sm font-medium mb-1">เลือก User</label>
                 <select required value={formData.employee_id} onChange={e => setFormData({...formData, employee_id: e.target.value})} className="w-full border rounded-md px-3 py-2 text-sm">
-                  <option value="">-- กรุณาเลือกพนักงาน --</option>
+                  <option value="">-- กรุณาเลือกบุคลากร --</option>
                   {employees.map(emp => (
                     <option key={emp.id} value={emp.id}>{emp.first_name} {emp.last_name}</option>
                   ))}

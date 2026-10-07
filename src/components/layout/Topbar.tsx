@@ -161,7 +161,7 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
           <Search className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
-            placeholder="ค้นหาพนักงาน, KPI, การอบรม..."
+            placeholder="ค้นหาบุคลากร, KPI, การอบรม..."
             className="w-full pl-10 pr-4 py-2 border border-[#F0EEE9] bg-white/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#A3C4BC] focus:border-transparent text-sm transition-all"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -176,7 +176,7 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
                 <div className="py-2">
                   {searchResults.employees.length > 0 && (
                     <div className="mb-2">
-                      <div className="px-4 py-1 text-xs font-bold text-gray-500 bg-[#F0EEE9]/30 uppercase tracking-wider">พนักงาน (Personnel)</div>
+                      <div className="px-4 py-1 text-xs font-bold text-gray-500 bg-[#F0EEE9]/30 uppercase tracking-wider">บุคลากร (Personnel)</div>
                       {searchResults.employees.map((emp) => (
                         <div key={emp.id} className="px-4 py-2 hover:bg-[#F0EEE9]/50 cursor-pointer transition-colors" onClick={() => { router.push('/personnel'); setIsSearchOpen(false); }}>
                           <p className="text-sm font-bold text-gray-900">{emp.first_name} {emp.last_name}</p>

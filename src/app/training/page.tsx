@@ -82,7 +82,7 @@ export default function TrainingPage() {
             <BookOpen className="w-6 h-6 mr-2 text-indigo-600" />
             Training Management
           </h1>
-          <p className="text-sm text-gray-500 mt-1">จัดการหลักสูตรอบรมและพัฒนาทักษะพนักงาน</p>
+          <p className="text-sm text-gray-500 mt-1">จัดการหลักสูตรอบรมและพัฒนาทักษะบุคลากร</p>
         </div>
         <Button onClick={() => setIsModalOpen(true)} className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white shadow-md hover:shadow-lg hover:shadow-indigo-500/30 transition-all duration-300 hover:scale-[1.02] active:scale-95 text-base py-2.5">
           <Plus className="w-5 h-5 mr-2" />

@@ -142,7 +142,7 @@ export default function AdminPage() {
                         'bg-gray-50 border-gray-300 hover:bg-gray-100'
                       }`}
                     >
-                      <option value="employee">Employee (พนักงาน)</option>
+                      <option value="employee">Employee (บุคลากร)</option>
                       <option value="hr">HR (ฝ่ายบุคคล)</option>
                       <option value="admin">Admin (ผู้ดูแลระบบ)</option>
                     </select>

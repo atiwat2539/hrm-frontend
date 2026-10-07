@@ -98,7 +98,7 @@ export default function DashboardPage() {
   const todayEvents = dashboardData?.todayEvents || [];
 
   const stats = [
-    { name: 'พนักงานทั้งหมด', value: totalEmployees.toString(), icon: Users, change: 'จำนวนปัจจุบัน', changeType: 'positive', color: '#B3C2F2' },
+    { name: 'บุคลากรทั้งหมด', value: totalEmployees.toString(), icon: Users, change: 'จำนวนปัจจุบัน', changeType: 'positive', color: '#B3C2F2' },
     { name: 'เป้าหมาย KPI ทั้งหมด', value: totalKpis.toString(), icon: Target, change: 'หัวข้อประเมิน', changeType: 'positive', color: '#F4D8D8' },
     { name: 'KPI ที่สำเร็จ', value: kpiCompleted, icon: Target, change: 'อัตราภาพรวม', changeType: 'positive', color: '#D1E8E2' },
   ];
@@ -204,7 +204,7 @@ export default function DashboardPage() {
         {/* KPI Distribution Chart */}
         <div className="bg-white p-6 rounded-3xl shadow-sm border border-[#F0EEE9] hover:shadow-xl transition-all duration-300 flex flex-col min-h-[450px]">
           <h3 className="text-xl font-bold text-gray-800 mb-2">สถานะ KPI ภาพรวม</h3>
-          <p className="text-sm text-gray-500 mb-6">สัดส่วนความสำเร็จของพนักงาน</p>
+          <p className="text-sm text-gray-500 mb-6">สัดส่วนความสำเร็จของบุคลากร</p>
           <div className="flex-1 w-full relative">
             {kpiData.every((d: any) => d.value === 0) ? (
               <div className="flex h-full items-center justify-center text-gray-400 font-medium">

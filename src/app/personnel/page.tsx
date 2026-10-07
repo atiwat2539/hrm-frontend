@@ -147,7 +147,7 @@ export default function PersonnelPage() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Personnel Management</h1>
-          <p className="text-gray-500 mt-1">จัดการข้อมูลพนักงานทั้งหมดในระบบ</p>
+          <p className="text-gray-500 mt-1">จัดการข้อมูลบุคลากรทั้งหมดในระบบ</p>
         </div>
         <div className="flex items-center space-x-3 w-full sm:w-auto">
           <div className="relative w-full sm:w-64">
@@ -162,7 +162,7 @@ export default function PersonnelPage() {
           </div>
           <Button onClick={openAddModal} className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white whitespace-nowrap px-5 py-2.5 rounded-lg shadow-md hover:shadow-lg hover:shadow-indigo-500/30 transition-all duration-300 hover:scale-[1.02] active:scale-95">
             <Plus className="w-5 h-5 mr-2" />
-            เพิ่มพนักงาน
+            เพิ่มบุคลากร
           </Button>
         </div>
       </div>
@@ -229,7 +229,7 @@ export default function PersonnelPage() {
           ))}
           {filteredEmployees.length === 0 && (
             <div className="col-span-full py-12 text-center text-gray-500 bg-white rounded-xl border border-dashed">
-              ไม่พบข้อมูลพนักงาน
+              ไม่พบข้อมูลบุคลากร
             </div>
           )}
         </div>
@@ -240,7 +240,7 @@ export default function PersonnelPage() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
             <div className="px-6 py-4 border-b bg-gray-50 flex justify-between items-center">
-              <h2 className="text-xl font-bold text-gray-900">{currentEmployee.id ? 'แก้ไขข้อมูลพนักงาน' : 'เพิ่มพนักงานใหม่'}</h2>
+              <h2 className="text-xl font-bold text-gray-900">{currentEmployee.id ? 'แก้ไขข้อมูลบุคลากร' : 'เพิ่มบุคลากรใหม่'}</h2>
               <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600 bg-white rounded-full p-1 shadow-sm">
                 <X className="w-5 h-5" />
               </button>
@@ -267,7 +267,7 @@ export default function PersonnelPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                   <div className="col-span-1">
-                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">รหัสพนักงาน <span className="text-red-500">*</span></label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">รหัสบุคลากร <span className="text-red-500">*</span></label>
                     <input required value={currentEmployee.employee_code || ''} onChange={e => setCurrentEmployee({...currentEmployee, employee_code: e.target.value})} type="text" className="w-full border border-gray-300 rounded-lg px-3 py-2.5" />
                   </div>
                   <div className="col-span-2">

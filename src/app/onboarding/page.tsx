@@ -180,7 +180,7 @@ export default function OnboardingPage() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-6 rounded-xl shadow-sm border border-gray-100 gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Employee Onboarding</h1>
-          <p className="text-sm text-gray-500 mt-1">ติดตามและจัดการความคืบหน้าการเริ่มงานของพนักงานใหม่</p>
+          <p className="text-sm text-gray-500 mt-1">ติดตามและจัดการความคืบหน้าการเริ่มงานของบุคลากรใหม่</p>
         </div>
         <Button onClick={() => setIsModalOpen(true)} className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white shadow-md hover:shadow-lg hover:shadow-indigo-500/30 transition-all duration-300 hover:scale-[1.02] active:scale-95 text-base py-2.5">
           <Plus className="w-5 h-5 mr-2" />
@@ -280,7 +280,7 @@ export default function OnboardingPage() {
             <CheckCircle className="w-8 h-8 text-indigo-300" />
           </div>
           <h3 className="text-lg font-bold text-gray-900 mb-1">ยังไม่มีแผนปฐมนิเทศ</h3>
-          <p className="text-gray-500">กดปุ่มสร้างแผนปฐมนิเทศใหม่เพื่อเริ่มติดตามความคืบหน้าของพนักงาน</p>
+          <p className="text-gray-500">กดปุ่มสร้างแผนปฐมนิเทศใหม่เพื่อเริ่มติดตามความคืบหน้าของบุคลากร</p>
         </div>
       )}
 
@@ -298,20 +298,20 @@ export default function OnboardingPage() {
             <form onSubmit={handleCreateOnboarding} className="p-6">
               <div className="space-y-5">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">เลือกพนักงาน (ที่ยังไม่มีแผน)</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">เลือกบุคลากร (ที่ยังไม่มีแผน)</label>
                   <select 
                     required 
                     value={selectedEmpId} 
                     onChange={e => setSelectedEmpId(e.target.value)}
                     className="w-full border border-gray-300 rounded-lg px-3 py-2.5 bg-white"
                   >
-                    <option value="" disabled>-- เลือกพนักงาน --</option>
+                    <option value="" disabled>-- เลือกบุคลากร --</option>
                     {availableEmployees.map(emp => (
                       <option key={emp.id} value={emp.id}>{emp.first_name} {emp.last_name} ({emp.position})</option>
                     ))}
                   </select>
                   {availableEmployees.length === 0 && (
-                    <p className="text-xs text-amber-600 mt-2">พนักงานทุกคนมีแผนปฐมนิเทศแล้ว กรุณาเพิ่มพนักงานใหม่ในระบบก่อน</p>
+                    <p className="text-xs text-amber-600 mt-2">บุคลากรทุกคนมีแผนปฐมนิเทศแล้ว กรุณาเพิ่มบุคลากรใหม่ในระบบก่อน</p>
                   )}
                 </div>
 

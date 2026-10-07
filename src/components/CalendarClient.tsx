@@ -467,7 +467,7 @@ export default function CalendarClient() {
                       <span className="text-base text-gray-800 font-medium">{emp.first_name} {emp.last_name} <span className="text-gray-500 text-sm font-normal">({emp.employee_code})</span></span>
                     </label>
                   ))}
-                  {employees.length === 0 && <p className="text-sm text-gray-500 text-center py-4">ยังไม่มีข้อมูลพนักงาน</p>}
+                  {employees.length === 0 && <p className="text-sm text-gray-500 text-center py-4">ยังไม่มีข้อมูลบุคลากร</p>}
                 </div>
               </div>
 

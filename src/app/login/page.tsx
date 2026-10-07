@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -21,7 +21,7 @@ export default function LoginPage() {
     setSuccess('');
     setLoading(true);
     try {
-      const response = await axios.post(\\/api/auth/login\, {
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/auth/login`, {
         email,
         password
       });
@@ -41,7 +41,7 @@ export default function LoginPage() {
     setSuccess('');
     setLoading(true);
     try {
-      const response = await axios.post(\\/api/auth/reset-password\, {
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/auth/reset-password`, {
         email
       });
       setSuccess(response.data.message);

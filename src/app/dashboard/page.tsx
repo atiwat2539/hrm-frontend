@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Users, UserPlus, Target, Clock } from 'lucide-react';
+import { Users, UserPlus, Target, Clock, X, MapPin, AlignLeft } from 'lucide-react';
 import { 
   LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer 
@@ -11,12 +11,18 @@ import axios from 'axios';
 export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [dashboardData, setDashboardData] = useState<any>(null);
+  const [user, setUser] = useState<any>(null);
+  const [selectedEvent, setSelectedEvent] = useState<any>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchDashboardStats = async () => {
       try {
         const token = localStorage.getItem('token');
         if (!token) return;
+
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) setUser(JSON.parse(storedUser));
 
         const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/dashboard/stats`, {
           headers: { Authorization: `Bearer ${token}` }
@@ -80,9 +86,14 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6 bg-gradient-to-br from-[#F0EEE9]/50 to-white p-6 rounded-3xl min-h-[calc(100vh-100px)]">
-      <div>
-        <h1 className="text-3xl font-extrabold text-gray-800 tracking-tight">ภาพรวมระบบ (Dashboard)</h1>
-        <p className="text-sm text-gray-600 mt-1">สีสันประจำปี 2026: Cloud Dancer (PANTONE 11-4201)</p>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-extrabold text-gray-800 tracking-tight">สวัสดี, {user?.first_name || 'ผู้ใช้งาน'}</h1>
+          <p className="text-sm text-gray-600 mt-1">ภาพรวมการปฏิบัติงาน</p>
+        </div>
+        <div className="bg-white/80 backdrop-blur px-5 py-2.5 rounded-2xl shadow-sm border border-[#F0EEE9] text-gray-700 font-medium">
+          {new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' })}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -133,7 +144,11 @@ export default function DashboardPage() {
               </div>
             ) : (
               todayEvents.map((event: any) => (
-                <div key={event.id} className="flex items-center p-5 rounded-2xl border border-[#F0EEE9] bg-white shadow-sm hover:shadow-md hover:bg-[#F0EEE9]/20 hover:scale-[1.01] transition-all duration-300 group">
+                <div 
+                  key={event.id} 
+                  onClick={() => { setSelectedEvent(event); setIsModalOpen(true); }}
+                  className="flex items-center p-5 rounded-2xl border border-[#F0EEE9] bg-white shadow-sm hover:shadow-md hover:bg-[#F0EEE9]/20 hover:scale-[1.01] transition-all duration-300 group cursor-pointer"
+                >
                   <div className="min-w-[90px] text-center border-r-2 border-[#F0EEE9] pr-5 mr-5 flex flex-col justify-center">
                     <span className="text-2xl font-black text-gray-800 group-hover:text-[#87B3A8] transition-colors">{event.time}</span>
                   </div>
@@ -192,6 +207,102 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* Individual Progress Bars */}
+      <div className="bg-white p-8 rounded-3xl shadow-sm border border-[#F0EEE9] hover:shadow-xl transition-all duration-300">
+        <h3 className="text-xl font-bold text-gray-800 mb-6">ความก้าวหน้าในการทำงานของบุคลากร</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {!dashboardData?.individualKpiData || dashboardData.individualKpiData.length === 0 ? (
+            <div className="text-center text-gray-400 py-4 col-span-full">ไม่มีข้อมูลความก้าวหน้าบุคลากร</div>
+          ) : (
+            dashboardData.individualKpiData.map((emp: any, idx: number) => (
+              <div key={idx} className="flex flex-col gap-2">
+                <div className="flex justify-between items-center text-sm font-semibold text-gray-700">
+                  <span>{emp.name}</span>
+                  <span>{emp.achievement}%</span>
+                </div>
+                <div className="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden shadow-inner">
+                  <div 
+                    className="h-2.5 rounded-full transition-all duration-1000"
+                    style={{ 
+                      width: `${emp.achievement}%`,
+                      backgroundColor: emp.achievement >= 80 ? '#A3C4BC' : emp.achievement >= 50 ? '#E7C8A0' : '#E5989B'
+                    }}
+                  ></div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
+      {/* Event Details Modal */}
+      {isModalOpen && selectedEvent && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col">
+            <div className="p-6 border-b border-gray-100 flex justify-between items-start relative">
+              <div className="absolute top-0 left-0 w-full h-1" style={{ backgroundColor: selectedEvent.color || '#A3C4BC' }}></div>
+              <div className="pr-8">
+                <div className="flex items-center gap-2 mb-2">
+                  <span 
+                    className="text-xs font-bold px-2.5 py-1 rounded-md text-white shadow-sm"
+                    style={{ backgroundColor: selectedEvent.color || '#A3C4BC' }}
+                  >
+                    {selectedEvent.category || 'กิจกรรม'}
+                  </span>
+                </div>
+                <h2 className="text-2xl font-bold text-gray-900">{selectedEvent.title}</h2>
+              </div>
+              <button 
+                onClick={() => setIsModalOpen(false)} 
+                className="text-gray-400 hover:text-gray-700 bg-gray-50 hover:bg-gray-100 rounded-full p-2 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-5">
+              <div className="flex items-start gap-4">
+                <div className="bg-blue-50 p-3 rounded-2xl text-blue-600">
+                  <Clock className="w-6 h-6" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500 font-medium">เวลา</p>
+                  <p className="text-gray-900 font-bold text-lg">
+                    {selectedEvent.time} {selectedEvent.end_time ? `- ${selectedEvent.end_time}` : ''}
+                  </p>
+                </div>
+              </div>
+
+              {selectedEvent.location && (
+                <div className="flex items-start gap-4">
+                  <div className="bg-red-50 p-3 rounded-2xl text-red-600">
+                    <MapPin className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500 font-medium">สถานที่</p>
+                    <p className="text-gray-900 font-bold">{selectedEvent.location}</p>
+                  </div>
+                </div>
+              )}
+
+              {selectedEvent.description && (
+                <div className="flex items-start gap-4">
+                  <div className="bg-gray-50 p-3 rounded-2xl text-gray-600">
+                    <AlignLeft className="w-6 h-6" />
+                  </div>
+                  <div className="w-full">
+                    <p className="text-sm text-gray-500 font-medium">รายละเอียด</p>
+                    <p className="text-gray-800 mt-1 whitespace-pre-wrap bg-gray-50 p-3 rounded-xl border border-gray-100 text-sm">
+                      {selectedEvent.description}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

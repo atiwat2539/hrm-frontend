@@ -25,16 +25,16 @@ interface SidebarProps {
 }
 
 const menuItems = [
-  { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-  { name: 'Personnel', path: '/personnel', icon: Users },
-  { name: 'KPIs', path: '/kpi', icon: Target },
-  { name: 'Projects', path: '/projects', icon: Briefcase },
-  { name: 'Calendar', path: '/calendar', icon: Calendar },
-  { name: 'Training', path: '/training', icon: GraduationCap },
-  { name: 'Onboarding', path: '/onboarding', icon: UserPlus },
-  { name: 'Reports', path: '/reports', icon: FileText },
-  { name: 'Notifications', path: '/notifications', icon: Bell },
-  { name: 'Settings', path: '/settings', icon: Settings },
+  { name: 'แดชบอร์ด', path: '/dashboard', icon: LayoutDashboard },
+  { name: 'ข้อมูลบุคลากร', path: '/personnel', icon: Users },
+  { name: 'ภาระงาน (KPIs)', path: '/kpi', icon: Target },
+  { name: 'โครงการ', path: '/projects', icon: Briefcase },
+  { name: 'ปฏิทินกิจกรรม', path: '/calendar', icon: Calendar },
+  { name: 'การอบรม', path: '/training', icon: GraduationCap },
+  { name: 'การเริ่มงาน', path: '/onboarding', icon: UserPlus },
+  { name: 'รายงาน', path: '/reports', icon: FileText },
+  { name: 'การแจ้งเตือน', path: '/notifications', icon: Bell },
+  { name: 'ตั้งค่า', path: '/settings', icon: Settings },
 ];
 
 export default function Sidebar({ onClose }: SidebarProps) {
@@ -114,7 +114,7 @@ export default function Sidebar({ onClose }: SidebarProps) {
                 }`}
               >
                 <Shield className={`w-5 h-5 transition-transform duration-300 ${pathname.startsWith('/admin') ? 'scale-110 text-white' : 'group-hover:scale-110'}`} />
-                <span>Admin Panel</span>
+                <span>ระบบผู้ดูแล</span>
               </Link>
             </li>
           )}
@@ -126,7 +126,7 @@ export default function Sidebar({ onClose }: SidebarProps) {
           className="w-full flex items-center justify-center space-x-3 bg-gradient-to-r from-red-500 to-rose-600 text-white cursor-pointer transition-all duration-300 px-4 py-3 rounded-xl hover:from-red-600 hover:to-rose-700 hover:shadow-lg hover:shadow-red-500/30 hover:scale-[1.02] group"
         >
           <LogOut className="w-5 h-5 transition-transform duration-300 group-hover:scale-110" />
-          <span className="font-bold">Logout</span>
+          <span className="font-bold">ออกจากระบบ</span>
         </button>
       </div>
     </aside>

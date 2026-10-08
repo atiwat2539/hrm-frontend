@@ -473,14 +473,7 @@ export default function KpiPage() {
                           <td className="px-4 py-4">
                             <div className="flex flex-col items-start">
                               <span className="font-bold text-indigo-600 text-lg">{fyTotal}</span>
-                              {yearResults.length > 0 && (
-                                <button 
-                                  onClick={() => { setSelectedKpiHistory({...kpi, results: yearResults}); setIsHistoryModalOpen(true); }}
-                                  className="text-xs text-blue-600 hover:text-blue-800 hover:underline mt-1 font-medium bg-blue-50 px-2 py-0.5 rounded"
-                                >
-                                  ดูประวัติ {yearResults.length} รายการ
-                                </button>
-                              )}
+                              
                             </div>
                           </td>
                           
@@ -505,7 +498,26 @@ export default function KpiPage() {
                           </td>
 
                           <td className="px-4 py-4 text-center">
-                            <div className="flex items-center justify-center space-x-2">
+                            <div className="flex items-center justify-center space-x-1">
+                              {/* History */}
+                              <button 
+                                onClick={() => { setSelectedKpiHistory({...kpi, results: yearResults}); setIsHistoryModalOpen(true); }}
+                                className={`p-1.5 rounded ${yearResults.length > 0 ? 'text-indigo-600 hover:bg-indigo-50' : 'text-gray-300'}`}
+                                title="ดูประวัติการบันทึก"
+                                disabled={yearResults.length === 0}
+                              >
+                                <History className="w-4 h-4" />
+                              </button>
+
+                              {/* Clear Results */}
+                              <button 
+                                onClick={() => handleDeleteResults(kpi.id)}
+                                className={`p-1.5 rounded ${yearResults.length > 0 ? 'text-orange-500 hover:bg-orange-50' : 'text-gray-300'}`}
+                                title="ลบข้อมูลการบันทึกที่ผ่านมา"
+                                disabled={yearResults.length === 0}
+                              >
+                                <Eraser className="w-4 h-4" />
+                              </button>
                               <button 
                                 onClick={() => handleOpenModalForEdit(kpi)}
                                 className="p-1.5 text-blue-600 hover:bg-blue-50 rounded"

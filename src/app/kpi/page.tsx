@@ -2,7 +2,7 @@
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 import { useState, useEffect, Fragment } from 'react';
-import { Target, TrendingUp, AlertTriangle, X, Plus, Edit2, Trash2, History, Eraser, ArrowUp, ArrowDown } from 'lucide-react';
+import { Target, TrendingUp, AlertTriangle, X, Plus, Edit2, Trash2, History, Eraser, GripVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import axios from 'axios';
 
@@ -138,35 +138,67 @@ export default function KpiPage() {
 
 
 
-  const handleMove = async (kpiId: number, direction: 'up' | 'down') => {
-    const targetKpi = kpis.find((x: any) => x.id === kpiId);
-    if (!targetKpi) return;
+  
+  const [topicOrder, setTopicOrder] = useState<string[]>([]);
+  const [draggedTopic, setDraggedTopic] = useState<string | null>(null);
+
+  useEffect(() => {
+    const topics = Array.from(new Set(kpis.map((k: any) => k.title)));
+    setTopicOrder(topics);
+  }, [kpis]);
+
+  const handleDragStart = (e: React.DragEvent, topic: string) => {
+    setDraggedTopic(topic);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent, topic: string) => {
+    e.preventDefault(); 
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = async (e: React.DragEvent, targetTopic: string) => {
+    e.preventDefault();
+    if (!draggedTopic || draggedTopic === targetTopic) {
+      setDraggedTopic(null);
+      return;
+    }
+
+    const newOrder = [...topicOrder];
+    const draggedIdx = newOrder.indexOf(draggedTopic);
+    const targetIdx = newOrder.indexOf(targetTopic);
     
-    const topicKpis = kpis.filter((k: any) => k.title === targetKpi.title);
-    const currentIndex = topicKpis.findIndex((k: any) => k.id === kpiId);
+    newOrder.splice(draggedIdx, 1);
+    newOrder.splice(targetIdx, 0, draggedTopic);
     
-    if (direction === 'up' && currentIndex === 0) return;
-    if (direction === 'down' && currentIndex === topicKpis.length - 1) return;
+    setTopicOrder(newOrder);
+    setDraggedTopic(null);
+
+    let currentGlobalOrder = 0;
+    const reorderedKpis: any[] = [];
     
-    // Assign sequential display_order first to ensure it's clean
-    const reordered = topicKpis.map((k: any, i: number) => ({ id: k.id, display_order: i }));
-    
-    // Swap
-    const swapIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
-    const temp = reordered[currentIndex].display_order;
-    reordered[currentIndex].display_order = reordered[swapIndex].display_order;
-    reordered[swapIndex].display_order = temp;
-    
+    newOrder.forEach(topic => {
+      const tKpis = kpis.filter(k => k.title === topic);
+      tKpis.forEach(k => {
+        reorderedKpis.push({ id: k.id, display_order: currentGlobalOrder++ });
+      });
+    });
+
     try {
       const token = localStorage.getItem('token');
-      await axios.put(`${API_URL}/reorder`, { kpis: reordered }, {
+      await axios.put(`${API_URL}/reorder`, { kpis: reorderedKpis }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       fetchData();
     } catch (err: any) {
-      alert('Failed to reorder: ' + (err.response?.data?.message || err.message));
+      alert('Failed to save new order: ' + (err.response?.data?.message || err.message));
     }
   };
+
+  const handleDragEnd = () => {
+    setDraggedTopic(null);
+  };
+
 
   const handleDeleteResults = async (id: number) => {
     if (!confirm('ยืนยันการลบข้อมูลการบันทึกทั้งหมดของ KPI นี้? (หากลบแล้วข้อมูลยอดสะสมจะกลายเป็น 0)')) return;
@@ -368,19 +400,31 @@ export default function KpiPage() {
                   <th className="px-3 py-3 font-semibold text-center">เป้าหมายรายปี</th>
                 </tr>
               </thead>
-              <tbody>
                 {Object.keys(groupedKpis).length === 0 ? (
-                  <tr><td colSpan={17} className="text-center py-4">ไม่มีข้อมูลภาระงาน</td></tr>
+                  <tbody><tr><td colSpan={17} className="text-center py-4">ไม่มีข้อมูลภาระงาน</td></tr></tbody>
                 ) : (
-                  (Object.entries(groupedKpis) as any).map((entry: any) => {
-                    const [mainTopic, topicKpis] = entry;
+                  topicOrder.map((mainTopic: string) => {
+                    const topicKpis = groupedKpis[mainTopic];
+                    if (!topicKpis) return null;
                     return (
-                    <Fragment key={mainTopic}>
-                      <tr className="bg-indigo-50 border-b border-indigo-200">
-                        <td colSpan={17} className="px-4 py-3 font-bold text-indigo-900 text-[15px]">
-                          หัวข้อหลัก: {mainTopic}
+                    <tbody 
+                      key={mainTopic}
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, mainTopic)}
+                      onDragOver={(e) => handleDragOver(e, mainTopic)}
+                      onDrop={(e) => handleDrop(e, mainTopic)}
+                      onDragEnd={handleDragEnd}
+                      className={`transition-opacity ${draggedTopic === mainTopic ? 'opacity-40' : 'opacity-100'}`}
+                    >
+                      <tr className="bg-indigo-50 border-b border-indigo-200 cursor-move hover:bg-indigo-100 transition-colors" title="คลิกค้างแล้วลากเพื่อย้ายตำแหน่ง">
+                        <td colSpan={17} className="px-3 py-3 font-bold text-indigo-900 text-[15px]">
+                          <div className="flex items-center">
+                            <GripVertical className="w-4 h-4 mr-1.5 text-indigo-400" />
+                            หัวข้อหลัก: {mainTopic}
+                          </div>
                         </td>
                       </tr>
+                        
                       {topicKpis.map((kpi: any) => {
                         // Calculate monthly sums for this Fiscal Year (Jun - May)
                         // Index: 0=Jun, 1=Jul, 2=Aug, 3=Sep, 4=Oct, 5=Nov, 6=Dec, 7=Jan, 8=Feb, 9=Mar, 10=Apr, 11=May
@@ -427,10 +471,10 @@ export default function KpiPage() {
                           </tr>
                         );
                       })}
-                    </Fragment>
-                  )})
+                    </tbody>
+                    )
+                  })
                 )}
-              </tbody>
             </table>
           ) : (
             <table className="w-full text-base text-left text-gray-600">
@@ -447,19 +491,31 @@ export default function KpiPage() {
                   <th className="px-4 py-4 font-semibold text-center">จัดการ</th>
                 </tr>
               </thead>
-              <tbody>
                 {Object.keys(groupedKpis).length === 0 ? (
-                  <tr><td colSpan={9} className="text-center py-4">ไม่มีข้อมูลภาระงาน</td></tr>
+                  <tbody><tr><td colSpan={9} className="text-center py-4">ไม่มีข้อมูลภาระงาน</td></tr></tbody>
                 ) : (
-                  (Object.entries(groupedKpis) as any).map((entry: any) => {
-                    const [mainTopic, topicKpis] = entry;
+                  topicOrder.map((mainTopic: string) => {
+                    const topicKpis = groupedKpis[mainTopic];
+                    if (!topicKpis) return null;
                     return (
-                    <Fragment key={mainTopic}>
-                      <tr className="bg-indigo-50 border-b border-indigo-200">
-                        <td colSpan={9} className="px-4 py-3 font-bold text-indigo-900 text-[15px]">
-                          หัวข้อหลัก: {mainTopic}
+                    <tbody 
+                      key={mainTopic}
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, mainTopic)}
+                      onDragOver={(e) => handleDragOver(e, mainTopic)}
+                      onDrop={(e) => handleDrop(e, mainTopic)}
+                      onDragEnd={handleDragEnd}
+                      className={`transition-opacity ${draggedTopic === mainTopic ? 'opacity-40' : 'opacity-100'}`}
+                    >
+                      <tr className="bg-indigo-50 border-b border-indigo-200 cursor-move hover:bg-indigo-100 transition-colors" title="คลิกค้างแล้วลากเพื่อย้ายตำแหน่ง">
+                        <td colSpan={17} className="px-3 py-3 font-bold text-indigo-900 text-[15px]">
+                          <div className="flex items-center">
+                            <GripVertical className="w-4 h-4 mr-1.5 text-indigo-400" />
+                            หัวข้อหลัก: {mainTopic}
+                          </div>
                         </td>
                       </tr>
+                        
                       {topicKpis.map((kpi: any) => {
                         let fyTotal = 0;
                         if (kpi.results) {
@@ -530,23 +586,7 @@ export default function KpiPage() {
 
                           <td className="px-4 py-4 text-center">
                             <div className="flex items-center justify-center space-x-1">
-                              {/* Move Up/Down */}
-                              <div className="flex flex-col space-y-0.5 mr-1">
-                                <button 
-                                  onClick={() => handleMove(kpi.id, 'up')}
-                                  className="text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded p-0.5"
-                                  title="เลื่อนขึ้น"
-                                >
-                                  <ArrowUp className="w-3 h-3" strokeWidth={3} />
-                                </button>
-                                <button 
-                                  onClick={() => handleMove(kpi.id, 'down')}
-                                  className="text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded p-0.5"
-                                  title="เลื่อนลง"
-                                >
-                                  <ArrowDown className="w-3 h-3" strokeWidth={3} />
-                                </button>
-                              </div>
+                              
 
                               {/* History */}
                               <button 
@@ -586,10 +626,10 @@ export default function KpiPage() {
                         </tr>
                       );
                     })}
-                    </Fragment>
-                  )})
+                    </tbody>
+                    )
+                  })
                 )}
-              </tbody>
             </table>
           )}
         </div>

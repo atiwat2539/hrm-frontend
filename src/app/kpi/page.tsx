@@ -2,7 +2,7 @@
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 import { useState, useEffect, Fragment } from 'react';
-import { Target, TrendingUp, AlertTriangle, X, Plus, Edit2, Trash2, History, Eraser, GripVertical } from 'lucide-react';
+import { Target, TrendingUp, AlertTriangle, X, Plus, Edit2, Trash2, History, Eraser, ArrowUp, ArrowDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import axios from 'axios';
 
@@ -45,6 +45,7 @@ export default function KpiPage() {
 
   // Filter state
   const [selectedEmployeeFilter, setSelectedEmployeeFilter] = useState<string>('all');
+  const [selectedStatusFilter, setSelectedStatusFilter] = useState<string>('all');
 
   const [formData, setFormData] = useState({
     employee_id: '',
@@ -138,67 +139,35 @@ export default function KpiPage() {
 
 
 
-  
-  const [topicOrder, setTopicOrder] = useState<string[]>([]);
-  const [draggedTopic, setDraggedTopic] = useState<string | null>(null);
-
-  useEffect(() => {
-    const topics = Array.from(new Set(kpis.map((k: any) => k.title)));
-    setTopicOrder(topics);
-  }, [kpis]);
-
-  const handleDragStart = (e: React.DragEvent, topic: string) => {
-    setDraggedTopic(topic);
-    e.dataTransfer.effectAllowed = 'move';
-  };
-
-  const handleDragOver = (e: React.DragEvent, topic: string) => {
-    e.preventDefault(); 
-    e.dataTransfer.dropEffect = 'move';
-  };
-
-  const handleDrop = async (e: React.DragEvent, targetTopic: string) => {
-    e.preventDefault();
-    if (!draggedTopic || draggedTopic === targetTopic) {
-      setDraggedTopic(null);
-      return;
-    }
-
-    const newOrder = [...topicOrder];
-    const draggedIdx = newOrder.indexOf(draggedTopic);
-    const targetIdx = newOrder.indexOf(targetTopic);
+  const handleMove = async (kpiId: number, direction: 'up' | 'down') => {
+    const targetKpi = kpis.find((x: any) => x.id === kpiId);
+    if (!targetKpi) return;
     
-    newOrder.splice(draggedIdx, 1);
-    newOrder.splice(targetIdx, 0, draggedTopic);
+    const topicKpis = kpis.filter((k: any) => k.title === targetKpi.title);
+    const currentIndex = topicKpis.findIndex((k: any) => k.id === kpiId);
     
-    setTopicOrder(newOrder);
-    setDraggedTopic(null);
-
-    let currentGlobalOrder = 0;
-    const reorderedKpis: any[] = [];
+    if (direction === 'up' && currentIndex === 0) return;
+    if (direction === 'down' && currentIndex === topicKpis.length - 1) return;
     
-    newOrder.forEach(topic => {
-      const tKpis = kpis.filter(k => k.title === topic);
-      tKpis.forEach(k => {
-        reorderedKpis.push({ id: k.id, display_order: currentGlobalOrder++ });
-      });
-    });
-
+    // Assign sequential display_order first to ensure it's clean
+    const reordered = topicKpis.map((k: any, i: number) => ({ id: k.id, display_order: i }));
+    
+    // Swap
+    const swapIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+    const temp = reordered[currentIndex].display_order;
+    reordered[currentIndex].display_order = reordered[swapIndex].display_order;
+    reordered[swapIndex].display_order = temp;
+    
     try {
       const token = localStorage.getItem('token');
-      await axios.put(`${API_URL}/reorder`, { kpis: reorderedKpis }, {
+      await axios.put(`${API_URL}/reorder`, { kpis: reordered }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       fetchData();
     } catch (err: any) {
-      alert('Failed to save new order: ' + (err.response?.data?.message || err.message));
+      alert('Failed to reorder: ' + (err.response?.data?.message || err.message));
     }
   };
-
-  const handleDragEnd = () => {
-    setDraggedTopic(null);
-  };
-
 
   const handleDeleteResults = async (id: number) => {
     if (!confirm('ยืนยันการลบข้อมูลการบันทึกทั้งหมดของ KPI นี้? (หากลบแล้วข้อมูลยอดสะสมจะกลายเป็น 0)')) return;
@@ -269,19 +238,40 @@ export default function KpiPage() {
     : kpis.filter(k => k.employee_id.toString() === selectedEmployeeFilter);
 
   // Stats calculation (based on filtered data)
-  const totalKpis = filteredKpis.length;
-  const achieved = filteredKpis.filter(k => k.status === 'approved').length;
-  const belowTarget = filteredKpis.filter(k => k.status === 'rejected').length;
+  const computedKpis = filteredKpis.map(kpi => {
+    let fyTotal = 0;
+    if (kpi.results) {
+      kpi.results.forEach((r: any) => {
+        const monthInt = parseInt(r.month);
+        if (monthInt >= 6 && monthInt <= 12 && r.year === matrixYear - 1) fyTotal += r.actual;
+        else if (monthInt >= 1 && monthInt <= 5 && r.year === matrixYear) fyTotal += r.actual;
+      });
+    }
+    return { ...kpi, _fyTotal: fyTotal };
+  });
 
-  // Extract unique main topics for the datalist dropdown
-  const uniqueMainTopics = Array.from(new Set(kpis.map(k => k.title))).filter(Boolean);
+  const totalKpis = computedKpis.length;
+  const achieved = computedKpis.filter(k => k._fyTotal >= k.target).length;
+  const inProgress = computedKpis.filter(k => k._fyTotal > 0 && k._fyTotal < k.target).length;
+  const belowTarget = computedKpis.filter(k => k._fyTotal === 0).length;
+
+  const finalKpis = computedKpis.filter(k => {
+    if (selectedStatusFilter === 'achieved') return k._fyTotal >= k.target;
+    if (selectedStatusFilter === 'in_progress') return k._fyTotal > 0 && k._fyTotal < k.target;
+    if (selectedStatusFilter === 'below_target') return k._fyTotal === 0;
+    return true;
+  });
 
   // Group filtered KPIs by Main Topic
-  const groupedKpis = filteredKpis.reduce((acc, kpi) => {
+  const groupedKpis = finalKpis.reduce((acc, kpi) => {
     if (!acc[kpi.title]) acc[kpi.title] = [];
     acc[kpi.title].push(kpi);
     return acc;
   }, {} as Record<string, any[]>);
+
+  // Extract unique main topics for the datalist dropdown
+  const uniqueMainTopics = Array.from(new Set(kpis.map(k => k.title))).filter(Boolean);
+
 
   return (
     <div className="space-y-6 relative">
@@ -290,31 +280,53 @@ export default function KpiPage() {
           <h1 className="text-2xl font-bold text-gray-900">Workload & KPI Management</h1>
           <p className="text-sm text-gray-500">มอบหมายภาระงานรายบุคคลและอัปเดตตัวเลขแบบสะสมยอด</p>
         </div>
-        <Button onClick={handleOpenModalForCreate} className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white whitespace-nowrap px-5 py-2.5 rounded-lg shadow-md hover:shadow-lg hover:shadow-indigo-500/30 transition-all duration-300 hover:scale-[1.02] active:scale-95">
+        <Button onClick={handleOpenModalForCreate} className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white whitespace-nowrap px-8 py-6 text-lg font-bold rounded-xl shadow-lg hover:shadow-xl hover:shadow-indigo-500/40 transition-all duration-300 hover:scale-[1.02] active:scale-95">
           <Target className="w-5 h-5 mr-2" />
           มอบหมายภาระงาน
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center space-x-4 hover:shadow-xl hover:shadow-indigo-900/5 hover:-translate-y-1 transition-all duration-300 group">
-          <div className="p-3 bg-blue-50 rounded-full text-blue-600 group-hover:bg-blue-500 group-hover:text-white transition-all duration-300 group-hover:shadow-lg group-hover:shadow-blue-500/30 group-hover:scale-110"><Target className="w-6 h-6" /></div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div 
+          onClick={() => setSelectedStatusFilter('all')}
+          className={`p-4 rounded-2xl shadow-sm border cursor-pointer flex items-center space-x-4 transition-all duration-300 group ${selectedStatusFilter === 'all' ? 'border-blue-500 bg-blue-50' : 'border-gray-100 bg-white hover:shadow-xl hover:shadow-blue-900/5 hover:-translate-y-1'}`}
+        >
+          <div className="p-3 bg-blue-100 rounded-full text-blue-600 transition-all duration-300 group-hover:scale-110"><Target className="w-6 h-6" /></div>
           <div>
-            <p className="text-sm text-gray-500">ภาระงานทั้งหมด (Total)</p>
+            <p className="text-sm text-gray-500">ภาระงานทั้งหมด</p>
             <p className="text-2xl font-bold text-gray-900">{totalKpis}</p>
           </div>
         </div>
-        <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center space-x-4 hover:shadow-xl hover:shadow-emerald-900/5 hover:-translate-y-1 transition-all duration-300 group">
-          <div className="p-3 bg-emerald-50 rounded-full text-emerald-600 group-hover:bg-emerald-500 group-hover:text-white transition-all duration-300 group-hover:shadow-lg group-hover:shadow-emerald-500/30 group-hover:scale-110"><TrendingUp className="w-6 h-6" /></div>
+        
+        <div 
+          onClick={() => setSelectedStatusFilter('achieved')}
+          className={`p-4 rounded-2xl shadow-sm border cursor-pointer flex items-center space-x-4 transition-all duration-300 group ${selectedStatusFilter === 'achieved' ? 'border-emerald-500 bg-emerald-50' : 'border-gray-100 bg-white hover:shadow-xl hover:shadow-emerald-900/5 hover:-translate-y-1'}`}
+        >
+          <div className="p-3 bg-emerald-100 rounded-full text-emerald-600 transition-all duration-300 group-hover:scale-110"><TrendingUp className="w-6 h-6" /></div>
           <div>
-            <p className="text-sm text-gray-500">สำเร็จตามเป้า (Achieved)</p>
+            <p className="text-sm text-gray-500">สำเร็จตามเป้า</p>
             <p className="text-2xl font-bold text-gray-900">{achieved}</p>
           </div>
         </div>
-        <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center space-x-4 hover:shadow-xl hover:shadow-orange-900/5 hover:-translate-y-1 transition-all duration-300 group">
-          <div className="p-3 bg-orange-50 rounded-full text-orange-600 group-hover:bg-orange-500 group-hover:text-white transition-all duration-300 group-hover:shadow-lg group-hover:shadow-orange-500/30 group-hover:scale-110"><AlertTriangle className="w-6 h-6" /></div>
+
+        <div 
+          onClick={() => setSelectedStatusFilter('in_progress')}
+          className={`p-4 rounded-2xl shadow-sm border cursor-pointer flex items-center space-x-4 transition-all duration-300 group ${selectedStatusFilter === 'in_progress' ? 'border-amber-500 bg-amber-50' : 'border-gray-100 bg-white hover:shadow-xl hover:shadow-amber-900/5 hover:-translate-y-1'}`}
+        >
+          <div className="p-3 bg-amber-100 rounded-full text-amber-600 transition-all duration-300 group-hover:scale-110"><TrendingUp className="w-6 h-6" /></div>
           <div>
-            <p className="text-sm text-gray-500">ต่ำกว่าเป้า (Below Target)</p>
+            <p className="text-sm text-gray-500">กำลังดำเนินการ</p>
+            <p className="text-2xl font-bold text-gray-900">{inProgress}</p>
+          </div>
+        </div>
+
+        <div 
+          onClick={() => setSelectedStatusFilter('below_target')}
+          className={`p-4 rounded-2xl shadow-sm border cursor-pointer flex items-center space-x-4 transition-all duration-300 group ${selectedStatusFilter === 'below_target' ? 'border-rose-500 bg-rose-50' : 'border-gray-100 bg-white hover:shadow-xl hover:shadow-rose-900/5 hover:-translate-y-1'}`}
+        >
+          <div className="p-3 bg-rose-100 rounded-full text-rose-600 transition-all duration-300 group-hover:scale-110"><AlertTriangle className="w-6 h-6" /></div>
+          <div>
+            <p className="text-sm text-gray-500">ยังไม่เริ่มดำเนินการ</p>
             <p className="text-2xl font-bold text-gray-900">{belowTarget}</p>
           </div>
         </div>
@@ -400,31 +412,19 @@ export default function KpiPage() {
                   <th className="px-3 py-3 font-semibold text-center">เป้าหมายรายปี</th>
                 </tr>
               </thead>
+              <tbody>
                 {Object.keys(groupedKpis).length === 0 ? (
-                  <tbody><tr><td colSpan={17} className="text-center py-4">ไม่มีข้อมูลภาระงาน</td></tr></tbody>
+                  <tr><td colSpan={17} className="text-center py-4">ไม่มีข้อมูลภาระงาน</td></tr>
                 ) : (
-                  topicOrder.map((mainTopic: string) => {
-                    const topicKpis = groupedKpis[mainTopic];
-                    if (!topicKpis) return null;
+                  (Object.entries(groupedKpis) as any).map((entry: any) => {
+                    const [mainTopic, topicKpis] = entry;
                     return (
-                    <tbody 
-                      key={mainTopic}
-                      draggable
-                      onDragStart={(e) => handleDragStart(e, mainTopic)}
-                      onDragOver={(e) => handleDragOver(e, mainTopic)}
-                      onDrop={(e) => handleDrop(e, mainTopic)}
-                      onDragEnd={handleDragEnd}
-                      className={`transition-opacity ${draggedTopic === mainTopic ? 'opacity-40' : 'opacity-100'}`}
-                    >
-                      <tr className="bg-indigo-50 border-b border-indigo-200 cursor-move hover:bg-indigo-100 transition-colors" title="คลิกค้างแล้วลากเพื่อย้ายตำแหน่ง">
-                        <td colSpan={17} className="px-3 py-3 font-bold text-indigo-900 text-[15px]">
-                          <div className="flex items-center">
-                            <GripVertical className="w-4 h-4 mr-1.5 text-indigo-400" />
-                            หัวข้อหลัก: {mainTopic}
-                          </div>
+                    <Fragment key={mainTopic}>
+                      <tr className="bg-indigo-50 border-b border-indigo-200">
+                        <td colSpan={17} className="px-4 py-3 font-bold text-indigo-900 text-[15px]">
+                          หัวข้อหลัก: {mainTopic}
                         </td>
                       </tr>
-                        
                       {topicKpis.map((kpi: any) => {
                         // Calculate monthly sums for this Fiscal Year (Jun - May)
                         // Index: 0=Jun, 1=Jul, 2=Aug, 3=Sep, 4=Oct, 5=Nov, 6=Dec, 7=Jan, 8=Feb, 9=Mar, 10=Apr, 11=May
@@ -471,10 +471,10 @@ export default function KpiPage() {
                           </tr>
                         );
                       })}
-                    </tbody>
-                    )
-                  })
+                    </Fragment>
+                  )})
                 )}
+              </tbody>
             </table>
           ) : (
             <table className="w-full text-base text-left text-gray-600">
@@ -491,31 +491,19 @@ export default function KpiPage() {
                   <th className="px-4 py-4 font-semibold text-center">จัดการ</th>
                 </tr>
               </thead>
+              <tbody>
                 {Object.keys(groupedKpis).length === 0 ? (
-                  <tbody><tr><td colSpan={9} className="text-center py-4">ไม่มีข้อมูลภาระงาน</td></tr></tbody>
+                  <tr><td colSpan={9} className="text-center py-4">ไม่มีข้อมูลภาระงาน</td></tr>
                 ) : (
-                  topicOrder.map((mainTopic: string) => {
-                    const topicKpis = groupedKpis[mainTopic];
-                    if (!topicKpis) return null;
+                  (Object.entries(groupedKpis) as any).map((entry: any) => {
+                    const [mainTopic, topicKpis] = entry;
                     return (
-                    <tbody 
-                      key={mainTopic}
-                      draggable
-                      onDragStart={(e) => handleDragStart(e, mainTopic)}
-                      onDragOver={(e) => handleDragOver(e, mainTopic)}
-                      onDrop={(e) => handleDrop(e, mainTopic)}
-                      onDragEnd={handleDragEnd}
-                      className={`transition-opacity ${draggedTopic === mainTopic ? 'opacity-40' : 'opacity-100'}`}
-                    >
-                      <tr className="bg-indigo-50 border-b border-indigo-200 cursor-move hover:bg-indigo-100 transition-colors" title="คลิกค้างแล้วลากเพื่อย้ายตำแหน่ง">
-                        <td colSpan={17} className="px-3 py-3 font-bold text-indigo-900 text-[15px]">
-                          <div className="flex items-center">
-                            <GripVertical className="w-4 h-4 mr-1.5 text-indigo-400" />
-                            หัวข้อหลัก: {mainTopic}
-                          </div>
+                    <Fragment key={mainTopic}>
+                      <tr className="bg-indigo-50 border-b border-indigo-200">
+                        <td colSpan={9} className="px-4 py-3 font-bold text-indigo-900 text-[15px]">
+                          หัวข้อหลัก: {mainTopic}
                         </td>
                       </tr>
-                        
                       {topicKpis.map((kpi: any) => {
                         let fyTotal = 0;
                         if (kpi.results) {
@@ -586,7 +574,23 @@ export default function KpiPage() {
 
                           <td className="px-4 py-4 text-center">
                             <div className="flex items-center justify-center space-x-1">
-                              
+                              {/* Move Up/Down */}
+                              <div className="flex flex-col space-y-0.5 mr-1">
+                                <button 
+                                  onClick={() => handleMove(kpi.id, 'up')}
+                                  className="text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded p-0.5"
+                                  title="เลื่อนขึ้น"
+                                >
+                                  <ArrowUp className="w-3 h-3" strokeWidth={3} />
+                                </button>
+                                <button 
+                                  onClick={() => handleMove(kpi.id, 'down')}
+                                  className="text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded p-0.5"
+                                  title="เลื่อนลง"
+                                >
+                                  <ArrowDown className="w-3 h-3" strokeWidth={3} />
+                                </button>
+                              </div>
 
                               {/* History */}
                               <button 
@@ -626,10 +630,10 @@ export default function KpiPage() {
                         </tr>
                       );
                     })}
-                    </tbody>
-                    )
-                  })
+                    </Fragment>
+                  )})
                 )}
+              </tbody>
             </table>
           )}
         </div>

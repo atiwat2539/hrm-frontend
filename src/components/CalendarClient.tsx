@@ -485,29 +485,29 @@ export default function CalendarClient() {
       {/* Detail Modal */}
       {isDetailModalOpen && selectedEvent && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg p-7 max-h-[90vh] overflow-y-auto relative">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl p-8 max-h-[90vh] overflow-y-auto relative">
             
             <button onClick={() => setIsDetailModalOpen(false)} className="absolute top-6 right-6 text-gray-400 hover:text-gray-700 bg-gray-100 rounded-full p-1.5 transition-colors">
               <X className="w-5 h-5" />
             </button>
 
-            <div className="mb-6 pr-10">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">{selectedEvent.title}</h2>
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold text-white shadow-sm" style={{ backgroundColor: selectedEvent.backgroundColor }}>
+            <div className="mb-8 pr-12">
+              <h2 className="text-3xl font-bold text-gray-900 mb-3">{selectedEvent.title}</h2>
+              <span className="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-semibold text-white shadow-sm" style={{ backgroundColor: selectedEvent.backgroundColor }}>
                 {selectedEvent.extendedProps.category || 'General'}
               </span>
             </div>
             
-            <div className="space-y-5 text-base text-gray-800">
-              <div className="bg-gray-50 p-4 rounded-lg border">
-                <div className="grid grid-cols-4 gap-2 mb-2">
-                  <span className="font-semibold text-gray-500">เริ่มต้น:</span>
-                  <span className="col-span-3 font-medium">
+            <div className="space-y-6 text-base text-gray-800">
+              <div className="bg-gray-50 p-5 rounded-lg border">
+                <div className="grid grid-cols-4 gap-4 mb-3">
+                  <span className="font-semibold text-gray-500 text-lg">เริ่มต้น:</span>
+                  <span className="col-span-3 font-medium text-lg text-gray-900">
                     {new Date(selectedEvent.start).toLocaleString('th-TH', { dateStyle: 'long', timeStyle: 'short' })}
                   </span>
                 </div>
                 {selectedEvent.end && (
-                  <div className="grid grid-cols-4 gap-2">
+                  <div className="grid grid-cols-4 gap-4 mb-3">
                     <span className="font-semibold text-gray-500">สิ้นสุด:</span>
                     <span className="col-span-3 font-medium">
                       {new Date(selectedEvent.end).toLocaleString('th-TH', { dateStyle: 'long', timeStyle: 'short' })}
@@ -517,15 +517,15 @@ export default function CalendarClient() {
               </div>
               
               {selectedEvent.extendedProps.location && (
-                <div className="grid grid-cols-4 gap-2 px-1">
-                  <span className="font-semibold text-gray-500">สถานที่:</span>
-                  <span className="col-span-3">{selectedEvent.extendedProps.location}</span>
+                <div className="grid grid-cols-4 gap-4 px-2">
+                  <span className="font-semibold text-gray-500 text-lg">สถานที่:</span>
+                  <span className="col-span-3 font-medium text-gray-900 text-lg">{selectedEvent.extendedProps.location}</span>
                 </div>
               )}
 
-              <div className="grid grid-cols-4 gap-2 px-1">
-                <span className="font-semibold text-gray-500">รายละเอียด:</span>
-                <span className="col-span-3 whitespace-pre-line text-gray-700">{selectedEvent.extendedProps.description || '-'}</span>
+              <div className="bg-blue-50/50 p-6 rounded-xl border border-blue-100/50 mt-4">
+                <span className="font-semibold text-gray-700 block mb-3 text-lg">รายละเอียด:</span>
+                <div className="whitespace-pre-wrap text-gray-800 leading-relaxed text-base">{selectedEvent.extendedProps.description || '-'}</div>
               </div>
 
               <div className="pt-2">

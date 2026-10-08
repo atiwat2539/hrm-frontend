@@ -1,23 +1,23 @@
-'use client';
+const fs = require('fs');
 
-import { useState, useEffect } from 'react';
-import Sidebar from './Sidebar';
-import Topbar from './Topbar';
-import axios from 'axios';
-import { usePathname, useRouter } from 'next/navigation';
+let code = fs.readFileSync('src/components/layout/DashboardLayout.tsx', 'utf8');
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
-  const router = useRouter();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+// 1. Add axios import if missing
+if (!code.includes("import axios")) {
+  code = code.replace("import { usePathname", "import axios from 'axios';\nimport { usePathname");
+}
+
+// 2. Add state variables
+const stateHookStr = `  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   
   // Global Save Progress State
   const [isSaving, setIsSaving] = useState(false);
-  const [saveProgress, setSaveProgress] = useState(0);
-  
-  // Don't wrap login/register pages with the dashboard layout
-  
-  
+  const [saveProgress, setSaveProgress] = useState(0);`;
+
+code = code.replace("  const [isSidebarOpen, setIsSidebarOpen] = useState(false);", stateHookStr);
+
+// 3. Add useEffect for Axios Interceptors
+const axiosEffect = `
   // Axios Interceptors for Global Save Progress
   useEffect(() => {
     let intervalId: any;
@@ -68,48 +68,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       clearInterval(intervalId);
     };
   }, []);
+`;
 
-  // Auto Logout Logic (30 minutes of inactivity)
-  useEffect(() => {
-    if (pathname === '/login' || pathname === '/register') return;
+// Insert the effect right before auto-logout logic
+code = code.replace("// Auto Logout Logic", axiosEffect + "\n  // Auto Logout Logic");
 
-    let timeoutId: ReturnType<typeof setTimeout>;
-
-    const logout = () => {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      router.push('/login');
-    };
-
-    const resetTimeout = () => {
-      if (timeoutId) clearTimeout(timeoutId);
-      // 30 minutes
-      timeoutId = setTimeout(logout, 30 * 60 * 1000);
-    };
-
-    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
-
-    events.forEach(event => {
-      document.addEventListener(event, resetTimeout, { passive: true });
-    });
-
-    resetTimeout();
-
-    return () => {
-      if (timeoutId) clearTimeout(timeoutId);
-      events.forEach(event => {
-        document.removeEventListener(event, resetTimeout);
-      });
-    };
-  }, [pathname, router]);
-
-  if (pathname === '/login' || pathname === '/register') {
-    return <>{children}</>;
-  }
-
-  return (
-    <div className="flex h-screen bg-[#F0EEE9] overflow-hidden relative font-sans">
-      
+// 4. Add the Overlay Modal in the JSX return
+const overlayJSX = `
       {/* Global Save Progress Overlay */}
       {isSaving && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 transition-opacity duration-300">
@@ -126,7 +91,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <div className="w-full bg-gray-100 rounded-full h-3 mb-3 overflow-hidden shadow-inner">
               <div 
                 className="bg-gradient-to-r from-[#A3C4BC] to-[#87B3A8] h-3 rounded-full transition-all duration-300 ease-out" 
-                style={{ width: `${saveProgress}%` }}
+                style={{ width: \`\${saveProgress}%\` }}
               ></div>
             </div>
             <div className="w-full flex justify-end">
@@ -135,29 +100,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
         </div>
       )}
+`;
 
-      {/* Mobile Sidebar Overlay */}
-      {isSidebarOpen && (
-        <div 
-          className="fixed inset-0 bg-gray-900/40 z-40 lg:hidden backdrop-blur-sm transition-opacity"
-          onClick={() => setIsSidebarOpen(false)}
-        />
-      )}
+code = code.replace(
+  "{/* Mobile Sidebar Overlay */}", 
+  overlayJSX + "\n      {/* Mobile Sidebar Overlay */}"
+);
 
-      {/* Sidebar - Hidden on mobile unless open, block on desktop */}
-      <div className={`fixed inset-y-0 left-0 z-50 transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:flex ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-        <Sidebar onClose={() => setIsSidebarOpen(false)} />
-      </div>
-      
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden w-full bg-gradient-to-br from-[#F0EEE9]/90 to-[#FDFDFC]">
-        <Topbar onMenuClick={() => setIsSidebarOpen(true)} />
-        
-        <main className="flex-1 overflow-y-auto p-4 md:p-6 w-full">
-          <div className="max-w-7xl mx-auto w-full">
-            {children}
-          </div>
-        </main>
-      </div>
-    </div>
-  );
-}
+fs.writeFileSync('src/components/layout/DashboardLayout.tsx', code, 'utf8');
+console.log('DashboardLayout updated successfully!');

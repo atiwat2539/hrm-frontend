@@ -363,7 +363,7 @@ export default function CalendarClient() {
                   {categoryForm.id ? 'อัปเดต' : 'เพิ่ม'}
                 </Button>
                 {categoryForm.id && (
-                  <Button type="button" variant="outline" onClick={() => setCategoryForm({ id: null, label: '', color: '#4f46e5'})} className="h-10 px-2">
+                  <Button type="button" variant="outline" onClick={() => setCategoryForm({ id: null, label: '', color: '#4f46e5'})} className="h-10 px-0 md:px-2">
                     ยกเลิก
                   </Button>
                 )}
@@ -413,7 +413,7 @@ export default function CalendarClient() {
                 <input required value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} type="text" className="w-full border-2 rounded-md px-3 py-2 text-base focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" placeholder="ระบุชื่อกิจกรรม" />
               </div>
 
-              <div className="grid grid-cols-2 gap-4 bg-gray-50 p-4 rounded-lg border">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-gray-50 p-4 rounded-lg border">
                 <div>
                   <label className="block text-sm font-semibold mb-1.5 text-gray-700">วันที่เริ่มต้น</label>
                   <input required value={formData.start_date} onChange={e => setFormData({...formData, start_date: e.target.value})} type="date" className="w-full border rounded-md px-3 py-2 text-sm" />
@@ -485,13 +485,13 @@ export default function CalendarClient() {
       {/* Detail Modal */}
       {isDetailModalOpen && selectedEvent && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl p-8 max-h-[90vh] overflow-y-auto relative">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl p-5 md:p-8 max-h-[90vh] overflow-y-auto relative">
             
             <button onClick={() => setIsDetailModalOpen(false)} className="absolute top-6 right-6 text-gray-400 hover:text-gray-700 bg-gray-100 rounded-full p-1.5 transition-colors">
               <X className="w-5 h-5" />
             </button>
 
-            <div className="mb-8 pr-12">
+            <div className="mb-6 md:mb-8 pr-12">
               <h2 className="text-3xl font-bold text-gray-900 mb-3">{selectedEvent.title}</h2>
               <span className="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-semibold text-white shadow-sm" style={{ backgroundColor: selectedEvent.backgroundColor }}>
                 {selectedEvent.extendedProps.category || 'General'}
@@ -517,7 +517,7 @@ export default function CalendarClient() {
               </div>
               
               {selectedEvent.extendedProps.location && (
-                <div className="grid grid-cols-4 gap-4 px-2">
+                <div className="grid grid-cols-4 gap-4 px-0 md:px-2">
                   <span className="font-semibold text-gray-500 text-lg">สถานที่:</span>
                   <span className="col-span-3 font-medium text-gray-900 text-lg">{selectedEvent.extendedProps.location}</span>
                 </div>

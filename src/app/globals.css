@@ -128,3 +128,26 @@
     @apply font-sans;
   }
 }
+
+/* FullCalendar Mobile Responsive */
+@media (max-width: 640px) {
+  .fc .fc-toolbar {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+    align-items: center !important;
+  }
+  .fc .fc-toolbar-title {
+    font-size: 1.25rem !important;
+  }
+  .fc .fc-button {
+    padding: 0.25rem 0.5rem !important;
+    font-size: 0.875rem !important;
+  }
+  .fc .fc-toolbar-chunk {
+    display: flex !important;
+    justify-content: center !important;
+    flex-wrap: wrap !important;
+    gap: 0.25rem !important;
+  }
+}

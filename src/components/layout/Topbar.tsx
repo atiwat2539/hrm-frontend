@@ -157,11 +157,11 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
         <button onClick={onMenuClick} className="lg:hidden p-2 mr-2 text-gray-500 hover:text-[#87B3A8]">
           <Menu className="w-6 h-6" />
         </button>
-        <div className="relative w-48 sm:w-64 md:w-96" ref={searchRef}>
+        <div className="relative flex-1 max-w-[140px] sm:max-w-[200px] md:max-w-xs lg:max-w-md mx-2 md:mx-4" ref={searchRef}>
           <Search className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
-            placeholder="ค้นหาบุคลากร, KPI, การอบรม..."
+            placeholder="ค้นหา..."
             className="w-full pl-10 pr-4 py-2 border border-[#F0EEE9] bg-white/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#A3C4BC] focus:border-transparent text-sm transition-all"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}

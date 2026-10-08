@@ -2,7 +2,7 @@
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 import { useState, useEffect, Fragment } from 'react';
-import { Target, TrendingUp, AlertTriangle, X, Plus, Edit2, Trash2 } from 'lucide-react';
+import { Target, TrendingUp, AlertTriangle, X, Plus, Edit2, Trash2, History, Eraser } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import axios from 'axios';
 
@@ -133,6 +133,20 @@ export default function KpiPage() {
       fetchData(); // refresh list
     } catch (err: any) {
       alert(err.response?.data?.message || 'Failed to save workload');
+    }
+  };
+
+
+  const handleDeleteResults = async (id: number) => {
+    if (!confirm('ยืนยันการลบข้อมูลการบันทึกทั้งหมดของ KPI นี้? (หากลบแล้วข้อมูลยอดสะสมจะกลายเป็น 0)')) return;
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`${API_URL}/${id}/results`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      fetchData();
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Failed to clear results');
     }
   };
 

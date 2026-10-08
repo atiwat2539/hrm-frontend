@@ -1,15 +1,51 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   
   // Don't wrap login/register pages with the dashboard layout
+  
+  // Auto Logout Logic (30 minutes of inactivity)
+  useEffect(() => {
+    if (pathname === '/login' || pathname === '/register') return;
+
+    let timeoutId: ReturnType<typeof setTimeout>;
+
+    const logout = () => {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      router.push('/login');
+    };
+
+    const resetTimeout = () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      // 30 minutes
+      timeoutId = setTimeout(logout, 30 * 60 * 1000);
+    };
+
+    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
+
+    events.forEach(event => {
+      document.addEventListener(event, resetTimeout, { passive: true });
+    });
+
+    resetTimeout();
+
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      events.forEach(event => {
+        document.removeEventListener(event, resetTimeout);
+      });
+    };
+  }, [pathname, router]);
+
   if (pathname === '/login' || pathname === '/register') {
     return <>{children}</>;
   }

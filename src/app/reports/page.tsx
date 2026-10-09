@@ -91,7 +91,17 @@ export default function ReportsPage() {
   }
 
   return (
-    <div className="space-y-6 max-w-[1400px] mx-auto pb-10">
+    <div className="space-y-6 max-w-[1400px] mx-auto pb-10 print:max-w-none print:m-0 print:p-0">
+      <style>{`
+        @media print {
+          @page { size: landscape; margin: 10mm; }
+          body { -webkit-print-color-adjust: exact; }
+          table { page-break-inside: auto; width: 100% !important; }
+          tr { page-break-inside: avoid; page-break-after: auto; }
+          thead { display: table-header-group; }
+          tfoot { display: table-footer-group; }
+        }
+      `}</style>
       
       {/* Top Header / Filters (Hide when printing) */}
       <div className="flex flex-col md:flex-row justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-gray-100 gap-4 print:hidden">
@@ -149,8 +159,8 @@ export default function ReportsPage() {
         </div>
 
         {/* Report Table */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+        <div className="overflow-x-auto print:overflow-visible w-full">
+          <table className="w-full text-left border-collapse table-auto print:table-fixed print:text-xs">
             <thead>
               <tr className="bg-gray-50 border-y border-gray-200">
                 <th className="py-4 px-4 text-sm font-bold text-gray-800 border-x border-gray-200 w-[15%]">บุคลากร</th>

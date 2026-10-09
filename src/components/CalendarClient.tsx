@@ -330,8 +330,8 @@ export default function CalendarClient() {
 
       {/* Category Management Modal */}
       {isCategoryModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-200">
             <div className="flex justify-between items-center p-6 border-b bg-gray-50">
               <h2 className="text-xl font-bold text-gray-900">จัดการหมวดหมู่กิจกรรม</h2>
               <button onClick={() => setIsCategoryModalOpen(false)} className="text-gray-400 hover:text-gray-700 bg-white rounded-full p-1 shadow-sm">
@@ -398,8 +398,8 @@ export default function CalendarClient() {
 
       {/* Add/Edit Modal */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl p-6 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl p-6 max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-200">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-bold text-gray-900">{editEventId ? 'แก้ไขกิจกรรม' : 'เพิ่มกิจกรรม / ประชุม'}</h2>
               <button onClick={() => setIsAddModalOpen(false)} className="text-gray-400 hover:text-gray-700 bg-gray-100 rounded-full p-1.5">
@@ -484,8 +484,8 @@ export default function CalendarClient() {
 
       {/* Detail Modal */}
       {isDetailModalOpen && selectedEvent && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl p-5 md:p-8 max-h-[90vh] overflow-y-auto relative">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl p-5 md:p-8 max-h-[90vh] overflow-y-auto relative animate-in fade-in zoom-in-95 duration-200">
             
             <button onClick={() => setIsDetailModalOpen(false)} className="absolute top-6 right-6 text-gray-400 hover:text-gray-700 bg-gray-100 rounded-full p-1.5 transition-colors">
               <X className="w-5 h-5" />

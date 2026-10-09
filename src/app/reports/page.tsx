@@ -97,7 +97,7 @@ export default function ReportsPage() {
       <div className="flex flex-col md:flex-row justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-gray-100 gap-4 print:hidden">
         <div>
           <h1 className="text-xl font-bold text-gray-900">รายงานสรุปผลการประเมิน KPI</h1>
-          <p className="text-sm text-gray-500">ปีงบประมาณ {filterYear + 543}</p>
+          <p className="text-sm text-gray-500">รอบปี {filterYear + 543}</p>
         </div>
         <div className="flex items-center space-x-3">
           <select 
@@ -107,7 +107,7 @@ export default function ReportsPage() {
           >
             {[2, 1, 0, -1, -2].map(offset => {
               const y = currentYear + offset;
-              return <option key={y} value={y}>ปีงบประมาณ {y + 543}</option>
+              return <option key={y} value={y}>รอบปี {y + 543}</option>
             })}
           </select>
           <button onClick={fetchData} className="p-2 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-600 rounded-lg transition-colors">
@@ -144,7 +144,7 @@ export default function ReportsPage() {
         {/* Report Header */}
         <div className="text-center mb-10">
           <h2 className="text-2xl font-bold text-gray-900 mb-2">รายงานสรุปผลการปฏิบัติงานตามตัวชี้วัด (KPI PERFORMANCE REPORT)</h2>
-          <p className="text-gray-600 font-medium">ประจำปีงบประมาณ {filterYear + 543}</p>
+          <p className="text-gray-600 font-medium">ประจำรอบปี {filterYear + 543}</p>
           <p className="text-sm text-gray-400 mt-1">ออกรายงาน ณ วันที่ {new Date().toLocaleDateString('th-TH')}</p>
         </div>
 
@@ -180,7 +180,7 @@ export default function ReportsPage() {
                   <td colSpan={6} className="py-12 text-center text-gray-500 border-x border-b border-gray-200">
                     <div className="flex flex-col items-center justify-center">
                       <FileText className="w-12 h-12 text-gray-300 mb-3" />
-                      <p>ไม่มีข้อมูลสำหรับปีงบประมาณนี้</p>
+                      <p>ไม่มีข้อมูลสำหรับรอบปีนี้</p>
                     </div>
                   </td>
                 </tr>

@@ -69,11 +69,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     };
   }, []);
 
-  // Auto Logout Logic (30 minutes of inactivity)
+  // Auto Logout Logic (15 minutes of inactivity)
   useEffect(() => {
     if (pathname === '/login' || pathname === '/register') return;
 
-    let timeoutId: ReturnType<typeof setTimeout>;
+    let intervalId: ReturnType<typeof setInterval>;
+    let lastActionTime = Date.now();
 
     const logout = () => {
       localStorage.removeItem('token');
@@ -81,24 +82,31 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       router.push('/login');
     };
 
-    const resetTimeout = () => {
-      if (timeoutId) clearTimeout(timeoutId);
-      // 30 minutes
-      timeoutId = setTimeout(logout, 30 * 60 * 1000);
+    const checkIdle = () => {
+      // 15 minutes = 15 * 60 * 1000 = 900000 ms
+      if (Date.now() - lastActionTime >= 15 * 60 * 1000) {
+        logout();
+      }
     };
 
-    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
+    const updateActivity = () => {
+      lastActionTime = Date.now();
+    };
+
+    // Check every minute
+    intervalId = setInterval(checkIdle, 60 * 1000);
+
+    // Removed 'mousemove' as micro-movements of optical mice can prevent idle detection
+    const events = ['mousedown', 'keydown', 'scroll', 'touchstart', 'click'];
 
     events.forEach(event => {
-      document.addEventListener(event, resetTimeout, { passive: true });
+      document.addEventListener(event, updateActivity, { passive: true });
     });
 
-    resetTimeout();
-
     return () => {
-      if (timeoutId) clearTimeout(timeoutId);
+      if (intervalId) clearInterval(intervalId);
       events.forEach(event => {
-        document.removeEventListener(event, resetTimeout);
+        document.removeEventListener(event, updateActivity);
       });
     };
   }, [pathname, router]);

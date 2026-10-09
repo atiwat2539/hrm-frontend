@@ -15,14 +15,21 @@ export default function DashboardPage() {
   const [user, setUser] = useState<any>(null);
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [weather, setWeather] = useState<{ temp: number, text: string, icon: string } | null>(null);
+  const [weather, setWeather] = useState<{ temp: number, text: string, icon: string, aqi: number } | null>(null);
 
   useEffect(() => {
     const fetchWeather = async () => {
       try {
-        const res = await axios.get('https://api.open-meteo.com/v1/forecast?latitude=13.75&longitude=100.5167&current_weather=true');
-        const code = res.data.current_weather.weathercode;
-        const temp = res.data.current_weather.temperature;
+        const lat = 18.7883;
+        const lon = 98.9853;
+        const [weatherRes, aqiRes] = await Promise.all([
+          axios.get(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`),
+          axios.get(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=us_aqi`)
+        ]);
+        
+        const code = weatherRes.data.current_weather.weathercode;
+        const temp = weatherRes.data.current_weather.temperature;
+        const aqi = aqiRes.data.current.us_aqi;
         
         let icon = '☀️';
         let text = 'แจ่มใส';
@@ -33,7 +40,7 @@ export default function DashboardPage() {
         else if (code >= 80 && code <= 82) { icon = '🌦️'; text = 'ฝนตกปรอยๆ'; }
         else if (code >= 95) { icon = '⛈️'; text = 'ฝนฟ้าคะนอง'; }
         
-        setWeather({ temp, text, icon });
+        setWeather({ temp, text, icon, aqi });
       } catch (e) {
         console.error('Weather fetch error', e);
       }

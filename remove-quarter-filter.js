@@ -1,11 +1,13 @@
-'use client';
+const fs = require('fs');
+
+const code = `'use client';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Download, Printer, RefreshCw } from 'lucide-react';
 
-const KPI_API_URL = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/kpis`;
+const KPI_API_URL = \`\${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/kpis\`;
 
 export default function ReportsPage() {
   const currentYear = new Date().getFullYear();
@@ -20,7 +22,7 @@ export default function ReportsPage() {
       const token = localStorage.getItem('token');
       if (!token) return;
       const res = await axios.get(KPI_API_URL, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: \`Bearer \${token}\` }
       });
       setKpis(res.data);
     } catch (err) {
@@ -61,8 +63,8 @@ export default function ReportsPage() {
     }
 
     return {
-      id: `KPI-${kpi.id.toString().padStart(3, '0')}`,
-      title: kpi.title + (kpi.sub_title ? ` - ${kpi.sub_title}` : ''),
+      id: \`KPI-\${kpi.id.toString().padStart(3, '0')}\`,
+      title: kpi.title + (kpi.sub_title ? \` - \${kpi.sub_title}\` : ''),
       department: kpi.employee?.department || 'ไม่ระบุ',
       target: target,
       unit: kpi.unit || '',
@@ -77,20 +79,20 @@ export default function ReportsPage() {
     const headers = ['รหัส', 'ชื่อตัวชี้วัด', 'แผนก', 'เป้าหมาย', 'ผลงานจริง', 'บรรลุ (%)', 'น้ำหนัก (%)', 'สถานะ'];
     const rows = reportData.map(r => [
       r.id,
-      `"${r.title.replace(/"/g, '""')}"`,
-      `"${r.department}"`,
-      `"${r.target} ${r.unit}"`,
+      \`"\${r.title.replace(/"/g, '""')}"\`,
+      \`"\${r.department}"\`,
+      \`"\${r.target} \${r.unit}"\`,
       r.actual,
-      `"${r.achievement.toFixed(2)}%"`,
-      `"${r.weight}%"`,
+      \`"\${r.achievement.toFixed(2)}%"\`,
+      \`"\${r.weight}%"\`,
       r.status
     ]);
     
-    const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+    const csvContent = "data:text/csv;charset=utf-8,\\uFEFF" + [headers.join(','), ...rows.map(e => e.join(','))].join('\\n');
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `KPI_Report_${filterYear + 543}.csv`);
+    link.setAttribute("download", \`KPI_Report_\${filterYear + 543}.csv\`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -218,3 +220,7 @@ export default function ReportsPage() {
     </div>
   );
 }
+`;
+
+fs.writeFileSync('src/app/reports/page.tsx', code, 'utf8');
+console.log('Removed quarter filter from reports page.');

@@ -276,7 +276,6 @@ export default function ProjectsPage() {
               <div className="flex justify-between items-start mb-4">
                 <h3 className="text-xl font-bold text-gray-900 line-clamp-2 pr-4">{project.name}</h3>
                 <div className="flex gap-2 shrink-0 ml-2">
-                  <button onClick={() => handleOpenDetails(project)} className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-xl transition" title="ดูรายละเอียด"><Info className="w-5 h-5" /></button>
                   <button onClick={() => handleOpenEdit(project)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-xl transition"><Edit2 className="w-5 h-5" /></button>
                   <button onClick={() => handleDelete(project.id)} className="p-2 text-red-600 hover:bg-red-50 rounded-xl transition"><Trash2 className="w-5 h-5" /></button>
                 </div>
@@ -321,6 +320,14 @@ export default function ProjectsPage() {
                   <div className="bg-gradient-to-r from-indigo-500 to-violet-600 h-3 rounded-full transition-all duration-1000" style={{ width: `${project.progress}%` }}></div>
                 </div>
               </div>
+              
+              <button 
+                onClick={() => handleOpenDetails(project)}
+                className="mt-6 w-full py-3 bg-indigo-50 text-indigo-700 hover:bg-indigo-600 hover:text-white rounded-xl font-medium transition-colors flex items-center justify-center space-x-2"
+              >
+                <Info className="w-5 h-5" />
+                <span>ดูรายละเอียดโครงการ</span>
+              </button>
             </div>
           ))}
         </div>

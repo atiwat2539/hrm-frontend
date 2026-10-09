@@ -1,12 +1,14 @@
-'use client';
+const fs = require('fs');
+
+const code = `'use client';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Download, Printer, RefreshCw, FileText } from 'lucide-react';
+import { Download, Printer, RefreshCw } from 'lucide-react';
 
 // Use correct API endpoint for KPI
-const KPI_API_URL = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/kpi`;
+const KPI_API_URL = \`\${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/kpi\`;
 
 export default function ReportsPage() {
   const currentYear = new Date().getFullYear();
@@ -21,7 +23,7 @@ export default function ReportsPage() {
       const token = localStorage.getItem('token');
       if (!token) return;
       const res = await axios.get(KPI_API_URL, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: \`Bearer \${token}\` }
       });
       // Sort by ID to keep it consistent
       const sortedKpis = res.data.sort((a: any, b: any) => a.id - b.id);
@@ -52,31 +54,31 @@ export default function ReportsPage() {
     }
 
     return {
-      employeeName: kpi.employee ? `${kpi.employee.first_name} ${kpi.employee.last_name}` : 'ไม่ระบุ',
+      employeeName: kpi.employee ? \`\${kpi.employee.first_name} \${kpi.employee.last_name}\` : 'ไม่ระบุ',
       title: kpi.title || '-',
       subTitle: kpi.sub_title || '-',
       description: kpi.description || '-',
-      target: `${kpi.target} ${kpi.unit || ''}`.trim(),
-      actual: `${actual > 0 ? actual : 0} ${kpi.unit || ''}`.trim(),
+      target: \`\${kpi.target} \${kpi.unit || ''}\`.trim(),
+      actual: \`\${actual > 0 ? actual : 0} \${kpi.unit || ''}\`.trim(),
     };
   });
 
   const handleExportCSV = () => {
     const headers = ['บุคลากร', 'หัวข้อหลัก', 'หัวข้อย่อย', 'รายละเอียดภาระงาน', 'เป้าหมาย', 'ผลรวมที่ทำได้'];
     const rows = reportData.map(r => [
-      `"${r.employeeName}"`,
-      `"${r.title.replace(/"/g, '""')}"`,
-      `"${r.subTitle.replace(/"/g, '""')}"`,
-      `"${r.description.replace(/"/g, '""')}"`,
-      `"${r.target}"`,
-      `"${r.actual}"`
+      \`"\${r.employeeName}"\`,
+      \`"\${r.title.replace(/"/g, '""')}"\`,
+      \`"\${r.subTitle.replace(/"/g, '""')}"\`,
+      \`"\${r.description.replace(/"/g, '""')}"\`,
+      \`"\${r.target}"\`,
+      \`"\${r.actual}"\`
     ]);
     
-    const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+    const csvContent = "data:text/csv;charset=utf-8,\\uFEFF" + [headers.join(','), ...rows.map(e => e.join(','))].join('\\n');
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `KPI_Report_${filterYear + 543}.csv`);
+    link.setAttribute("download", \`KPI_Report_\${filterYear + 543}.csv\`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -194,3 +196,7 @@ export default function ReportsPage() {
     </div>
   );
 }
+`;
+
+fs.writeFileSync('src/app/reports/page.tsx', code, 'utf8');
+console.log('Fixed API and table layout.');

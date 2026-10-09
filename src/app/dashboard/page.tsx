@@ -15,7 +15,8 @@ export default function DashboardPage() {
   const [user, setUser] = useState<any>(null);
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [weather, setWeather] = useState<{ temp: number, text: string, icon: string, aqi: number } | null>(null);
+  const [weather, setWeather] = useState<any>(null);
+  const [isWeatherModalOpen, setIsWeatherModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchWeather = async () => {
@@ -23,7 +24,7 @@ export default function DashboardPage() {
         const lat = 18.7883;
         const lon = 98.9853;
         const [weatherRes, aqiRes] = await Promise.all([
-          axios.get(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`),
+          axios.get(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=Asia/Bangkok`),
           axios.get(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=us_aqi`)
         ]);
         
@@ -31,16 +32,29 @@ export default function DashboardPage() {
         const temp = weatherRes.data.current_weather.temperature;
         const aqi = aqiRes.data.current.us_aqi;
         
-        let icon = '☀️';
-        let text = 'แจ่มใส';
+        const getWeatherIconAndText = (code: number) => {
+          if (code >= 1 && code <= 3) return { icon: '⛅', text: 'มีเมฆบางส่วน' };
+          if (code >= 45 && code <= 48) return { icon: '🌫️', text: 'มีหมอก' };
+          if (code >= 51 && code <= 67) return { icon: '🌧️', text: 'มีฝนตก' };
+          if (code >= 80 && code <= 82) return { icon: '🌦️', text: 'ฝนตกปรอยๆ' };
+          if (code >= 95) return { icon: '⛈️', text: 'ฝนฟ้าคะนอง' };
+          return { icon: '☀️', text: 'แจ่มใส' };
+        };
+
+        const current = getWeatherIconAndText(code);
         
-        if (code >= 1 && code <= 3) { icon = '⛅'; text = 'มีเมฆบางส่วน'; }
-        else if (code >= 45 && code <= 48) { icon = '🌫️'; text = 'มีหมอก'; }
-        else if (code >= 51 && code <= 67) { icon = '🌧️'; text = 'มีฝนตก'; }
-        else if (code >= 80 && code <= 82) { icon = '🌦️'; text = 'ฝนตกปรอยๆ'; }
-        else if (code >= 95) { icon = '⛈️'; text = 'ฝนฟ้าคะนอง'; }
+        const daily = weatherRes.data.daily.time.map((t: string, i: number) => {
+          const wt = getWeatherIconAndText(weatherRes.data.daily.weathercode[i]);
+          return {
+            date: t,
+            max: weatherRes.data.daily.temperature_2m_max[i],
+            min: weatherRes.data.daily.temperature_2m_min[i],
+            icon: wt.icon,
+            text: wt.text
+          };
+        });
         
-        setWeather({ temp, text, icon, aqi });
+        setWeather({ temp, text: current.text, icon: current.icon, aqi, daily });
       } catch (e) {
         console.error('Weather fetch error', e);
       }
@@ -122,10 +136,31 @@ export default function DashboardPage() {
         </div>
         <div className="flex flex-wrap gap-3">
           {weather && (
-            <div className="bg-white/80 backdrop-blur px-5 py-2.5 rounded-2xl shadow-sm border border-[#F0EEE9] text-gray-700 font-medium flex items-center gap-2 transition-all hover:scale-105 cursor-default">
-              <span className="text-xl drop-shadow-sm">{weather.icon}</span>
-              <span>{weather.temp}°C <span className="text-sm text-gray-500 ml-1">{weather.text}</span></span>
-            </div>
+            <>
+              <div 
+                onClick={() => setIsWeatherModalOpen(true)}
+                className="bg-white/80 backdrop-blur px-5 py-2.5 rounded-2xl shadow-sm border border-[#F0EEE9] text-gray-700 font-medium flex items-center gap-2 transition-all hover:scale-105 cursor-pointer hover:shadow-md hover:border-indigo-200" title="คลิกเพื่อดูพยากรณ์อากาศล่วงหน้า 7 วัน">
+                <span className="text-xl drop-shadow-sm">{weather.icon}</span>
+                <span>{weather.temp}°C <span className="text-sm text-gray-500 ml-1">เชียงใหม่ ({weather.text})</span></span>
+              </div>
+              <div 
+                onClick={() => setIsWeatherModalOpen(true)}
+                className={`bg-white/80 backdrop-blur px-5 py-2.5 rounded-2xl shadow-sm border border-[#F0EEE9] font-medium flex items-center gap-2 transition-all hover:scale-105 cursor-pointer hover:shadow-md
+                ${weather.aqi <= 50 ? 'text-emerald-700' : 
+                  weather.aqi <= 100 ? 'text-yellow-600' : 
+                  weather.aqi <= 150 ? 'text-orange-600' : 
+                  weather.aqi <= 200 ? 'text-red-600' : 'text-purple-600'}`}
+                title="ดัชนีคุณภาพอากาศ (AQI) เชียงใหม่"
+              >
+                <span className="text-xl drop-shadow-sm">😷</span>
+                <span>AQI: {weather.aqi} <span className="text-sm opacity-80 ml-1">
+                  ({weather.aqi <= 50 ? 'ดีมาก' : 
+                    weather.aqi <= 100 ? 'ปานกลาง' : 
+                    weather.aqi <= 150 ? 'เริ่มมีผลกระทบ' : 
+                    weather.aqi <= 200 ? 'มีผลกระทบ' : 'อันตราย'})
+                </span></span>
+              </div>
+            </>
           )}
           <div className="bg-white/80 backdrop-blur px-5 py-2.5 rounded-2xl shadow-sm border border-[#F0EEE9] text-gray-700 font-medium flex items-center">
             {new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' })}

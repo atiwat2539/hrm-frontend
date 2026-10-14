@@ -14,11 +14,50 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   // Global Save Progress State
   const [isSaving, setIsSaving] = useState(false);
   const [saveProgress, setSaveProgress] = useState(0);
-  
-  // Don't wrap login/register pages with the dashboard layout
-  
-  
-  // Axios Interceptors for Global Save Progress
+
+  // Authentication Guard State
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+
+  // Check Authentication on mount and route change
+  useEffect(() => {
+    if (pathname === '/login' || pathname === '/register') {
+      setIsAuthenticated(true);
+      return;
+    }
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setIsAuthenticated(false);
+      router.replace('/login');
+      return;
+    }
+
+    // Check JWT expiry if valid token structure
+    try {
+      const parts = token.split('.');
+      if (parts.length === 3) {
+        const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+        const payload = JSON.parse(decodeURIComponent(escape(atob(base64))));
+        if (payload.exp && Date.now() >= payload.exp * 1000) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          setIsAuthenticated(false);
+          router.replace('/login');
+          return;
+        }
+      }
+    } catch {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      setIsAuthenticated(false);
+      router.replace('/login');
+      return;
+    }
+
+    setIsAuthenticated(true);
+  }, [pathname, router]);
+
+  // Axios Interceptors for Global Save Progress & 401 Unauthorized
   useEffect(() => {
     let intervalId: any;
     
@@ -58,6 +97,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         clearInterval(intervalId);
         setIsSaving(false);
         setSaveProgress(0);
+        if (error.response?.status === 401) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          setIsAuthenticated(false);
+          router.replace('/login');
+        }
         return Promise.reject(error);
       }
     );
@@ -67,7 +112,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       axios.interceptors.response.eject(resInterceptor);
       clearInterval(intervalId);
     };
-  }, []);
+  }, [router]);
 
   // Auto Logout Logic (15 minutes of inactivity)
   useEffect(() => {
@@ -79,7 +124,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const logout = () => {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      router.push('/login');
+      router.replace('/login');
     };
 
     const checkIdle = () => {
@@ -113,6 +158,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   if (pathname === '/login' || pathname === '/register') {
     return <>{children}</>;
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="flex h-screen w-screen items-center justify-center bg-[#F0EEE9]">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 border-4 border-[#87B3A8] border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-sm text-gray-500 font-medium">กำลังตรวจสอบสิทธิ์...</p>
+        </div>
+      </div>
+    );
   }
 
   return (

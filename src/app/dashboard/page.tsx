@@ -2,7 +2,7 @@
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 import { useState, useEffect } from 'react';
-import { Users, UserPlus, Target, Clock, X, MapPin, AlignLeft } from 'lucide-react';
+import { Users, UserPlus, Target, Clock, X, MapPin, AlignLeft, RefreshCw, Wind, ShieldAlert, Sun } from 'lucide-react';
 import { 
   LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer 
@@ -17,49 +17,79 @@ export default function DashboardPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [weather, setWeather] = useState<any>(null);
   const [isWeatherModalOpen, setIsWeatherModalOpen] = useState(false);
+  const [isAqiModalOpen, setIsAqiModalOpen] = useState(false);
+  const [isRefreshingAqi, setIsRefreshingAqi] = useState(false);
+
+  const fetchWeather = async (showSpinner = false) => {
+    try {
+      if (showSpinner) setIsRefreshingAqi(true);
+      const lat = 18.7883;
+      const lon = 98.9853;
+      const [weatherRes, aqiRes] = await Promise.all([
+        axios.get(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=Asia/Bangkok`),
+        axios.get(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=us_aqi,pm10,pm2_5,carbon_monoxide,nitrogen_dioxide,sulphur_dioxide,ozone,uv_index&hourly=us_aqi,pm2_5&timezone=Asia/Bangkok&forecast_days=1`)
+      ]);
+      
+      const code = weatherRes.data.current_weather.weathercode;
+      const temp = weatherRes.data.current_weather.temperature;
+      const currentAqi = aqiRes.data.current || {};
+      const aqi = currentAqi.us_aqi ?? 0;
+      
+      const getWeatherIconAndText = (code: number) => {
+        if (code >= 1 && code <= 3) return { icon: '⛅', text: 'มีเมฆบางส่วน' };
+        if (code >= 45 && code <= 48) return { icon: '🌫️', text: 'มีหมอก' };
+        if (code >= 51 && code <= 67) return { icon: '🌧️', text: 'มีฝนตก' };
+        if (code >= 80 && code <= 82) return { icon: '🌦️', text: 'ฝนตกปรอยๆ' };
+        if (code >= 95) return { icon: '⛈️', text: 'ฝนฟ้าคะนอง' };
+        return { icon: '☀️', text: 'แจ่มใส' };
+      };
+
+      const current = getWeatherIconAndText(code);
+      
+      const daily = weatherRes.data.daily.time.map((t: string, i: number) => {
+        const wt = getWeatherIconAndText(weatherRes.data.daily.weathercode[i]);
+        return {
+          date: t,
+          max: weatherRes.data.daily.temperature_2m_max[i],
+          min: weatherRes.data.daily.temperature_2m_min[i],
+          icon: wt.icon,
+          text: wt.text
+        };
+      });
+
+      const hourlyAqi = (aqiRes.data.hourly?.time || []).map((t: string, idx: number) => ({
+        time: t.split('T')[1]?.substring(0, 5) || '',
+        aqi: aqiRes.data.hourly?.us_aqi?.[idx] ?? 0,
+        pm2_5: aqiRes.data.hourly?.pm2_5?.[idx] ?? 0,
+      })).filter((_: any, idx: number) => idx % 3 === 0);
+
+      const now = new Date();
+      const updatedAt = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')} น.`;
+      
+      setWeather({
+        temp,
+        text: current.text,
+        icon: current.icon,
+        aqi,
+        pm2_5: currentAqi.pm2_5 ?? 0,
+        pm10: currentAqi.pm10 ?? 0,
+        co: currentAqi.carbon_monoxide ?? 0,
+        no2: currentAqi.nitrogen_dioxide ?? 0,
+        so2: currentAqi.sulphur_dioxide ?? 0,
+        o3: currentAqi.ozone ?? 0,
+        uv: currentAqi.uv_index ?? 0,
+        updatedAt,
+        hourlyAqi,
+        daily
+      });
+    } catch (e) {
+      console.error('Weather fetch error', e);
+    } finally {
+      if (showSpinner) setIsRefreshingAqi(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchWeather = async () => {
-      try {
-        const lat = 18.7883;
-        const lon = 98.9853;
-        const [weatherRes, aqiRes] = await Promise.all([
-          axios.get(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=Asia/Bangkok`),
-          axios.get(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=us_aqi`)
-        ]);
-        
-        const code = weatherRes.data.current_weather.weathercode;
-        const temp = weatherRes.data.current_weather.temperature;
-        const aqi = aqiRes.data.current.us_aqi;
-        
-        const getWeatherIconAndText = (code: number) => {
-          if (code >= 1 && code <= 3) return { icon: '⛅', text: 'มีเมฆบางส่วน' };
-          if (code >= 45 && code <= 48) return { icon: '🌫️', text: 'มีหมอก' };
-          if (code >= 51 && code <= 67) return { icon: '🌧️', text: 'มีฝนตก' };
-          if (code >= 80 && code <= 82) return { icon: '🌦️', text: 'ฝนตกปรอยๆ' };
-          if (code >= 95) return { icon: '⛈️', text: 'ฝนฟ้าคะนอง' };
-          return { icon: '☀️', text: 'แจ่มใส' };
-        };
-
-        const current = getWeatherIconAndText(code);
-        
-        const daily = weatherRes.data.daily.time.map((t: string, i: number) => {
-          const wt = getWeatherIconAndText(weatherRes.data.daily.weathercode[i]);
-          return {
-            date: t,
-            max: weatherRes.data.daily.temperature_2m_max[i],
-            min: weatherRes.data.daily.temperature_2m_min[i],
-            icon: wt.icon,
-            text: wt.text
-          };
-        });
-        
-        setWeather({ temp, text: current.text, icon: current.icon, aqi, daily });
-      } catch (e) {
-        console.error('Weather fetch error', e);
-      }
-    };
-
     const fetchDashboardStats = async () => {
       try {
         const token = localStorage.getItem('token');
@@ -81,6 +111,8 @@ export default function DashboardPage() {
 
     fetchWeather();
     fetchDashboardStats();
+    const aqiInterval = setInterval(() => fetchWeather(false), 5 * 60 * 1000);
+    return () => clearInterval(aqiInterval);
   }, []);
 
   if (loading) {
@@ -144,14 +176,28 @@ export default function DashboardPage() {
                 <span>{weather.temp}°C <span className="text-sm text-gray-500 ml-1">เชียงใหม่ ({weather.text})</span></span>
               </div>
               <div 
-                onClick={() => setIsWeatherModalOpen(true)}
-                className={`bg-white/80 backdrop-blur px-5 py-2.5 rounded-2xl shadow-sm border border-[#F0EEE9] font-medium flex items-center gap-2 transition-all hover:scale-105 cursor-pointer hover:shadow-md
+                onClick={() => setIsAqiModalOpen(true)}
+                className={`bg-white/80 backdrop-blur px-5 py-2.5 rounded-2xl shadow-sm border border-[#F0EEE9] font-medium flex items-center gap-2.5 transition-all hover:scale-105 cursor-pointer hover:shadow-md hover:border-emerald-200
                 ${weather.aqi <= 50 ? 'text-emerald-700' : 
                   weather.aqi <= 100 ? 'text-yellow-600' : 
                   weather.aqi <= 150 ? 'text-orange-600' : 
                   weather.aqi <= 200 ? 'text-red-600' : 'text-purple-600'}`}
-                title="ดัชนีคุณภาพอากาศ (AQI) เชียงใหม่"
+                title="คลิกเพื่อดูรายละเอียดคุณภาพอากาศแบบเรียลไทม์"
               >
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
+                    weather.aqi <= 50 ? 'bg-emerald-500' : 
+                    weather.aqi <= 100 ? 'bg-yellow-500' : 
+                    weather.aqi <= 150 ? 'bg-orange-500' : 
+                    weather.aqi <= 200 ? 'bg-red-500' : 'bg-purple-500'
+                  }`}></span>
+                  <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${
+                    weather.aqi <= 50 ? 'bg-emerald-500' : 
+                    weather.aqi <= 100 ? 'bg-yellow-500' : 
+                    weather.aqi <= 150 ? 'bg-orange-500' : 
+                    weather.aqi <= 200 ? 'bg-red-500' : 'bg-purple-500'
+                  }`}></span>
+                </span>
                 <span className="text-xl drop-shadow-sm">😷</span>
                 <span>AQI: {weather.aqi} <span className="text-sm opacity-80 ml-1">
                   ({weather.aqi <= 50 ? 'ดีมาก' : 
@@ -451,10 +497,179 @@ export default function DashboardPage() {
 
             <div className="mt-6 flex justify-between items-center bg-gray-50 p-4 rounded-xl text-sm">
               <span className="text-gray-600">คุณภาพอากาศ (AQI) ปัจจุบัน:</span>
-              <span className={`font-bold ${weather.aqi <= 50 ? 'text-emerald-600' : weather.aqi <= 100 ? 'text-yellow-600' : weather.aqi <= 150 ? 'text-orange-600' : 'text-red-600'}`}>
-                {weather.aqi} 😷
-              </span>
+              <button onClick={() => { setIsWeatherModalOpen(false); setIsAqiModalOpen(true); }} className={`font-bold underline cursor-pointer ${weather.aqi <= 50 ? 'text-emerald-600' : weather.aqi <= 100 ? 'text-yellow-600' : weather.aqi <= 150 ? 'text-orange-600' : 'text-red-600'}`}>
+                {weather.aqi} 😷 (ดูรายละเอียด)
+              </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Real-time Air Quality (AQI) Modal */}
+      {isAqiModalOpen && weather && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setIsAqiModalOpen(false)}>
+          <div className="bg-white rounded-3xl p-6 md:p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl relative animate-in fade-in zoom-in-95 duration-200 border border-gray-100" onClick={e => e.stopPropagation()}>
+            <button 
+              onClick={() => setIsAqiModalOpen(false)}
+              className="absolute top-5 right-5 p-2 text-gray-400 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6 pr-10">
+              <div>
+                <div className="flex items-center gap-2">
+                  <Wind className="w-6 h-6 text-[#87B3A8]" />
+                  <h2 className="text-2xl font-extrabold text-gray-900">รายงานคุณภาพอากาศ (เชียงใหม่)</h2>
+                </div>
+                <div className="flex items-center gap-2 mt-1 text-xs text-gray-500 font-medium">
+                  <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                  <span>ข้อมูลเรียลไทม์ (Open-Meteo Air Quality) • อัปเดตล่าสุด {weather.updatedAt}</span>
+                </div>
+              </div>
+              <button
+                onClick={() => fetchWeather(true)}
+                disabled={isRefreshingAqi}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold transition-all self-start sm:self-auto"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${isRefreshingAqi ? 'animate-spin text-indigo-600' : ''}`} />
+                {isRefreshingAqi ? 'กำลังอัปเดต...' : 'อัปเดตข้อมูล'}
+              </button>
+            </div>
+
+            {/* Main AQI Banner */}
+            <div className={`p-6 rounded-2xl border mb-6 flex flex-col md:flex-row items-center justify-between gap-6 ${
+              weather.aqi <= 50 ? 'bg-emerald-50/70 border-emerald-200 text-emerald-900' :
+              weather.aqi <= 100 ? 'bg-amber-50/70 border-amber-200 text-amber-900' :
+              weather.aqi <= 150 ? 'bg-orange-50/70 border-orange-200 text-orange-900' :
+              weather.aqi <= 200 ? 'bg-red-50/70 border-red-200 text-red-900' :
+              'bg-purple-50/70 border-purple-200 text-purple-900'
+            }`}>
+              <div className="flex items-center gap-5">
+                <div className={`w-20 h-20 rounded-2xl flex flex-col items-center justify-center text-white shadow-md shrink-0 ${
+                  weather.aqi <= 50 ? 'bg-emerald-500' :
+                  weather.aqi <= 100 ? 'bg-amber-500' :
+                  weather.aqi <= 150 ? 'bg-orange-500' :
+                  weather.aqi <= 200 ? 'bg-red-500' :
+                  'bg-purple-600'
+                }`}>
+                  <span className="text-xs font-bold uppercase tracking-wider opacity-90">US AQI</span>
+                  <span className="text-3xl font-black leading-none mt-0.5">{weather.aqi}</span>
+                </div>
+                <div>
+                  <span className="text-xs font-bold uppercase tracking-wider opacity-75">ระดับคุณภาพอากาศปัจจุบัน</span>
+                  <h3 className="text-2xl font-extrabold mt-0.5">
+                    {weather.aqi <= 50 ? 'คุณภาพอากาศดีมาก (Good)' :
+                     weather.aqi <= 100 ? 'คุณภาพอากาศปานกลาง (Moderate)' :
+                     weather.aqi <= 150 ? 'เริ่มมีผลกระทบต่อกลุ่มเสี่ยง (Unhealthy for Sensitive)' :
+                     weather.aqi <= 200 ? 'มีผลกระทบต่อสุขภาพ (Unhealthy)' :
+                     'อันตรายต่อสุขภาพอย่างมาก (Hazardous)'}
+                  </h3>
+                  <p className="text-sm mt-1 opacity-90 font-medium flex items-center gap-1.5">
+                    <ShieldAlert className="w-4 h-4 shrink-0" />
+                    {weather.aqi <= 50 ? 'อากาศบริสุทธิ์ เหมาะสำหรับกิจกรรมกลางแจ้งทุกประเภท' :
+                     weather.aqi <= 100 ? 'สามารถทำกิจกรรมกลางแจ้งได้ตามปกติ ผู้ที่แพ้ง่ายควรสังเกตอาการ' :
+                     weather.aqi <= 150 ? 'ควรลดระยะเวลาทำกิจกรรมกลางแจ้ง และสวมหน้ากากอนามัยป้องกันฝุ่น' :
+                     weather.aqi <= 200 ? 'หลีกเลี่ยงกิจกรรมกลางแจ้ง และต้องสวมหน้ากากป้องกันฝุ่น PM2.5' :
+                     'งดกิจกรรมกลางแจ้งทุกชนิด ปิดประตูหน้าต่างและเปิดเครื่องฟอกอากาศ'}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* AQI Scale Bar */}
+            <div className="mb-6">
+              <div className="flex justify-between text-[11px] font-bold text-gray-500 mb-1.5 px-1">
+                <span className="text-emerald-600">0-50 ดีมาก</span>
+                <span className="text-amber-600">51-100 ปานกลาง</span>
+                <span className="text-orange-600">101-150 เริ่มมีผล</span>
+                <span className="text-red-600">151-200 มีผลกระทบ</span>
+                <span className="text-purple-600">201+ อันตราย</span>
+              </div>
+              <div className="w-full h-3 rounded-full bg-gradient-to-r from-emerald-400 via-amber-400 via-orange-400 via-red-500 to-purple-600 relative shadow-inner">
+                <div 
+                  className="w-4 h-4 bg-white border-2 border-gray-900 rounded-full shadow-md absolute -top-0.5 -translate-x-1/2 transition-all duration-500"
+                  style={{ left: `${Math.min(100, Math.max(2, (weather.aqi / 250) * 100))}%` }}
+                  title={`AQI: ${weather.aqi}`}
+                />
+              </div>
+            </div>
+
+            {/* Detailed Pollutants Grid */}
+            <h4 className="text-sm font-bold text-gray-700 mb-3">ค่าดัชนีมลพิษทางอากาศรายตัว (เรียลไทม์)</h4>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
+              <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-gray-500">PM2.5</span>
+                  <span className="text-[11px] px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 font-bold">ฝุ่นขนาดเล็ก</span>
+                </div>
+                <p className="text-2xl font-black text-gray-900 mt-1">{weather.pm2_5} <span className="text-xs font-medium text-gray-500">µg/m³</span></p>
+              </div>
+
+              <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-gray-500">PM10</span>
+                  <span className="text-[11px] px-2 py-0.5 rounded-full bg-gray-200/70 text-gray-600 font-bold">ฝุ่นละออง</span>
+                </div>
+                <p className="text-2xl font-black text-gray-900 mt-1">{weather.pm10} <span className="text-xs font-medium text-gray-500">µg/m³</span></p>
+              </div>
+
+              <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-gray-500">O₃ (โอโซน)</span>
+                  <span className="text-[11px] px-2 py-0.5 rounded-full bg-sky-50 text-sky-600 font-bold">ก๊าซโอโซน</span>
+                </div>
+                <p className="text-2xl font-black text-gray-900 mt-1">{weather.o3} <span className="text-xs font-medium text-gray-500">µg/m³</span></p>
+              </div>
+
+              <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-gray-500">CO</span>
+                  <span className="text-[11px] font-medium text-gray-400">คาร์บอนมอนอกไซด์</span>
+                </div>
+                <p className="text-xl font-black text-gray-900 mt-1">{weather.co} <span className="text-xs font-medium text-gray-500">µg/m³</span></p>
+              </div>
+
+              <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-gray-500">NO₂ / SO₂</span>
+                  <span className="text-[11px] font-medium text-gray-400">ไนโตรเจน/ซัลเฟอร์</span>
+                </div>
+                <p className="text-xl font-black text-gray-900 mt-1">{weather.no2} / {weather.so2} <span className="text-xs font-medium text-gray-500">µg/m³</span></p>
+              </div>
+
+              <div className="bg-amber-50/60 p-4 rounded-2xl border border-amber-100">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-amber-700 flex items-center gap-1"><Sun className="w-3.5 h-3.5" /> UV Index</span>
+                  <span className="text-[11px] font-bold text-amber-600">รังสียูวี</span>
+                </div>
+                <p className="text-2xl font-black text-amber-900 mt-1">{weather.uv}</p>
+              </div>
+            </div>
+
+            {/* Hourly AQI Trend Today (24Hr format) */}
+            {weather.hourlyAqi && weather.hourlyAqi.length > 0 && (
+              <div>
+                <h4 className="text-sm font-bold text-gray-700 mb-3">แนวโน้มคุณภาพอากาศรายชั่วโมงวันนี้ (รูปแบบ 24 ชม.)</h4>
+                <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
+                  {weather.hourlyAqi.map((item: any, idx: number) => (
+                    <div key={idx} className="bg-gray-50 p-2.5 rounded-xl border border-gray-100 text-center flex flex-col items-center">
+                      <span className="text-[11px] font-bold text-gray-500">{item.time} น.</span>
+                      <span className={`text-sm font-black my-1 px-2 py-0.5 rounded-lg ${
+                        item.aqi <= 50 ? 'bg-emerald-100 text-emerald-700' :
+                        item.aqi <= 100 ? 'bg-amber-100 text-amber-700' :
+                        item.aqi <= 150 ? 'bg-orange-100 text-orange-700' :
+                        'bg-red-100 text-red-700'
+                      }`}>
+                        {item.aqi}
+                      </span>
+                      <span className="text-[10px] text-gray-400">PM2.5: {item.pm2_5}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { BookOpen, Calendar, Clock, MapPin, Users, Plus, X, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import TimePicker24 from '@/components/ui/TimePicker24';
 
 interface Training {
   id: number;
@@ -97,7 +98,7 @@ export default function TrainingPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {trainings.map((course) => {
             const startDateStr = new Date(course.start_date).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' });
-            const startTimeStr = new Date(course.start_date).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+            const startTimeStr = new Date(course.start_date).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', hour12: false });
             const enrolled = course.employee_trainings ? course.employee_trainings.length : 0;
             
             return (
@@ -135,7 +136,7 @@ export default function TrainingPage() {
                     </div>
                     <div className="flex items-center text-sm text-gray-600 bg-gray-50 p-2 rounded-lg border border-gray-100">
                       <Clock className="w-4 h-4 mr-3 text-gray-400 flex-shrink-0" />
-                      <span>{startTimeStr} ({course.hours} ชั่วโมง)</span>
+                      <span>{startTimeStr} น. ({course.hours} ชั่วโมง)</span>
                     </div>
                     <div className="flex items-center text-sm text-gray-600 bg-gray-50 p-2 rounded-lg border border-gray-100">
                       <MapPin className="w-4 h-4 mr-3 text-gray-400 flex-shrink-0" />
@@ -210,13 +211,49 @@ export default function TrainingPage() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5 bg-gray-50 p-4 rounded-lg border border-gray-200">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">วัน-เวลา เริ่มต้น <span className="text-red-500">*</span></label>
-                    <input required value={formData.start_date || ''} onChange={e => setFormData({...formData, start_date: e.target.value})} type="datetime-local" className="w-full border border-gray-300 rounded-lg px-3 py-2.5 bg-white" />
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-gray-700">วันและเวลาเริ่มต้น (24 ชม.) <span className="text-red-500">*</span></label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <input 
+                        required 
+                        type="date" 
+                        value={(formData.start_date || '').split('T')[0] || ''} 
+                        onChange={e => {
+                          const time = (formData.start_date || '').split('T')[1] || '09:00';
+                          setFormData({...formData, start_date: `${e.target.value}T${time}`});
+                        }} 
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white" 
+                      />
+                      <TimePicker24 
+                        value={(formData.start_date || '').split('T')[1]?.substring(0, 5) || '09:00'} 
+                        onChange={time => {
+                          const date = (formData.start_date || '').split('T')[0] || new Date().toISOString().split('T')[0];
+                          setFormData({...formData, start_date: `${date}T${time}`});
+                        }} 
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">วัน-เวลา สิ้นสุด <span className="text-red-500">*</span></label>
-                    <input required value={formData.end_date || ''} onChange={e => setFormData({...formData, end_date: e.target.value})} type="datetime-local" className="w-full border border-gray-300 rounded-lg px-3 py-2.5 bg-white" />
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-gray-700">วันและเวลาสิ้นสุด (24 ชม.) <span className="text-red-500">*</span></label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <input 
+                        required 
+                        type="date" 
+                        value={(formData.end_date || '').split('T')[0] || ''} 
+                        onChange={e => {
+                          const time = (formData.end_date || '').split('T')[1] || '17:00';
+                          setFormData({...formData, end_date: `${e.target.value}T${time}`});
+                        }} 
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white" 
+                      />
+                      <TimePicker24 
+                        value={(formData.end_date || '').split('T')[1]?.substring(0, 5) || '17:00'} 
+                        onChange={time => {
+                          const date = (formData.end_date || '').split('T')[0] || new Date().toISOString().split('T')[0];
+                          setFormData({...formData, end_date: `${date}T${time}`});
+                        }} 
+                      />
+                    </div>
                   </div>
                 </div>
 

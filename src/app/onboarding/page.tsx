@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { CheckCircle, Clock, AlertCircle, Plus, X, Calendar as CalendarIcon, Edit2, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import TimePicker24 from '@/components/ui/TimePicker24';
 
 interface Employee {
   id: number;
@@ -239,7 +240,7 @@ export default function OnboardingPage() {
                             {task.due_date && (
                               <div className="flex items-center">
                                 <CalendarIcon className="w-3 h-3 mr-1" />
-                                {new Date(task.due_date).toLocaleDateString('th-TH')} {new Date(task.due_date).toLocaleTimeString('th-TH', {hour: '2-digit', minute:'2-digit'})}
+                                {new Date(task.due_date).toLocaleDateString('th-TH')} เวลา {new Date(task.due_date).toLocaleTimeString('th-TH', {hour: '2-digit', minute:'2-digit', hour12: false})} น.
                               </div>
                             )}
                             {task.responsible_person && (
@@ -368,14 +369,26 @@ export default function OnboardingPage() {
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">วัน/เวลา ที่กำหนด (Due Date)</label>
-                <input 
-                  type="datetime-local" 
-                  value={taskForm.due_date}
-                  onChange={e => setTaskForm({...taskForm, due_date: e.target.value})}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 bg-white"
-                />
+              <div className="space-y-1.5">
+                <label className="block text-sm font-semibold text-gray-700">วัน/เวลา ที่กำหนด (Due Date - รูปแบบ 24 ชม.)</label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <input 
+                    type="date" 
+                    value={(taskForm.due_date || '').split('T')[0] || ''} 
+                    onChange={e => {
+                      const time = (taskForm.due_date || '').split('T')[1] || '09:00';
+                      setTaskForm({...taskForm, due_date: e.target.value ? `${e.target.value}T${time}` : ''});
+                    }} 
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white" 
+                  />
+                  <TimePicker24 
+                    value={(taskForm.due_date || '').split('T')[1]?.substring(0, 5) || '09:00'} 
+                    onChange={time => {
+                      const date = (taskForm.due_date || '').split('T')[0] || new Date().toISOString().split('T')[0];
+                      setTaskForm({...taskForm, due_date: `${date}T${time}`});
+                    }} 
+                  />
+                </div>
               </div>
 
               <div>

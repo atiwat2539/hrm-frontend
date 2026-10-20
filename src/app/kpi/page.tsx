@@ -778,7 +778,7 @@ export default function KpiPage() {
                           <td className="px-4 py-3 font-bold text-indigo-600">+{res.actual} <span className="text-xs font-normal text-gray-500">{selectedKpiHistory.unit}</span></td>
                           <td className="px-4 py-3">{res.note || '-'}</td>
                           <td className="px-4 py-3 text-xs text-gray-500">
-                            {new Date(res.created_at).toLocaleDateString('th-TH')} {new Date(res.created_at).toLocaleTimeString('th-TH')}
+                            {new Date(res.created_at).toLocaleDateString('th-TH')} {new Date(res.created_at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', hour12: false })} น.
                           </td>
                         </tr>
                       );

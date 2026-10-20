@@ -265,7 +265,7 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
                           {notification.message}
                         </p>
                         <p className="text-xs text-gray-400 mt-1.5">
-                          {new Date(notification.created_at).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' })}
+                          {new Date(notification.created_at).toLocaleDateString('th-TH', { dateStyle: 'short' })} {new Date(notification.created_at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', hour12: false })} น.
                         </p>
                       </div>
                       {!notification.is_read && (

@@ -8,6 +8,16 @@ import interactionPlugin from '@fullcalendar/interaction';
 import axios from 'axios';
 import { X, Settings, Edit2, Trash2, Plus, BellRing } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import TimePicker24 from '@/components/ui/TimePicker24';
+
+const formatDateTime24 = (dateStrOrObj: string | Date | null | undefined) => {
+  if (!dateStrOrObj) return '-';
+  const d = new Date(dateStrOrObj);
+  const datePart = d.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
+  const hours = String(d.getHours()).padStart(2, '0');
+  const minutes = String(d.getMinutes()).padStart(2, '0');
+  return `${datePart} เวลา ${hours}:${minutes} น.`;
+};
 
 export default function CalendarClient() {
   const [events, setEvents] = useState<any[]>([]);
@@ -324,6 +334,17 @@ export default function CalendarClient() {
             center: 'title',
             right: 'dayGridMonth,timeGridWeek'
           }}
+          eventTimeFormat={{
+            hour: '2-digit',
+            minute: '2-digit',
+            meridiem: false,
+            hour12: false
+          }}
+          slotLabelFormat={{
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+          }}
           height={750}
         />
       </div>
@@ -419,16 +440,16 @@ export default function CalendarClient() {
                   <input required value={formData.start_date} onChange={e => setFormData({...formData, start_date: e.target.value})} type="date" className="w-full border rounded-md px-3 py-2 text-sm" />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold mb-1.5 text-gray-700">เวลาเริ่มต้น</label>
-                  <input required value={formData.start_time} onChange={e => setFormData({...formData, start_time: e.target.value})} type="time" className="w-full border rounded-md px-3 py-2 text-sm" />
+                  <label className="block text-sm font-semibold mb-1.5 text-gray-700">เวลาเริ่มต้น (รูปแบบ 24 ชม.)</label>
+                  <TimePicker24 value={formData.start_time} onChange={time => setFormData({...formData, start_time: time})} />
                 </div>
                 <div>
                   <label className="block text-sm font-semibold mb-1.5 text-gray-700">วันที่สิ้นสุด</label>
                   <input required value={formData.end_date} onChange={e => setFormData({...formData, end_date: e.target.value})} type="date" className="w-full border rounded-md px-3 py-2 text-sm" />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold mb-1.5 text-gray-700">เวลาสิ้นสุด</label>
-                  <input required value={formData.end_time} onChange={e => setFormData({...formData, end_time: e.target.value})} type="time" className="w-full border rounded-md px-3 py-2 text-sm" />
+                  <label className="block text-sm font-semibold mb-1.5 text-gray-700">เวลาสิ้นสุด (รูปแบบ 24 ชม.)</label>
+                  <TimePicker24 value={formData.end_time} onChange={time => setFormData({...formData, end_time: time})} />
                 </div>
               </div>
 
@@ -503,14 +524,14 @@ export default function CalendarClient() {
                 <div className="grid grid-cols-4 gap-4 mb-3">
                   <span className="font-semibold text-gray-500 text-lg">เริ่มต้น:</span>
                   <span className="col-span-3 font-medium text-lg text-gray-900">
-                    {new Date(selectedEvent.start).toLocaleString('th-TH', { dateStyle: 'long', timeStyle: 'short' })}
+                    {formatDateTime24(selectedEvent.start)}
                   </span>
                 </div>
                 {selectedEvent.end && (
                   <div className="grid grid-cols-4 gap-4 mb-3">
                     <span className="font-semibold text-gray-500">สิ้นสุด:</span>
                     <span className="col-span-3 font-medium">
-                      {new Date(selectedEvent.end).toLocaleString('th-TH', { dateStyle: 'long', timeStyle: 'short' })}
+                      {formatDateTime24(selectedEvent.end)}
                     </span>
                   </div>
                 )}

@@ -140,10 +140,7 @@ export default function NotificationsPage() {
                         {notification.message}
                       </p>
                       <p className="text-sm text-gray-400 mt-2 flex items-center">
-                        {new Date(notification.created_at).toLocaleString('th-TH', { 
-                          dateStyle: 'medium', 
-                          timeStyle: 'short' 
-                        })}
+                        {new Date(notification.created_at).toLocaleDateString('th-TH', { dateStyle: 'medium' })} เวลา {new Date(notification.created_at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', hour12: false })} น.
                       </p>
                     </div>
                     

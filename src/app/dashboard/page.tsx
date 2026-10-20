@@ -111,7 +111,7 @@ export default function DashboardPage() {
 
     fetchWeather();
     fetchDashboardStats();
-    const aqiInterval = setInterval(() => fetchWeather(false), 5 * 60 * 1000);
+    const aqiInterval = setInterval(() => fetchWeather(false), 60 * 60 * 1000);
     return () => clearInterval(aqiInterval);
   }, []);
 

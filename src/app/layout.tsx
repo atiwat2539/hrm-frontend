@@ -9,8 +9,8 @@ const kanit = Kanit({
 });
 
 export const metadata: Metadata = {
-  title: "HRM System",
-  description: "Personnel Management System",
+  title: "DigiDashboard",
+  description: "ระบบบริหารจัดการภาระงานบุคลากร",
 };
 
 export default function RootLayout({

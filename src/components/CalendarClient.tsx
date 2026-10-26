@@ -32,6 +32,7 @@ export default function CalendarClient() {
   
   // Filter
   const [filterCategory, setFilterCategory] = useState<string>('all');
+  const [filterEmployee, setFilterEmployee] = useState<string>('all');
   
   // Form State
   const [formData, setFormData] = useState({
@@ -262,8 +263,14 @@ export default function CalendarClient() {
     }
   };
 
+  const filteredEvents = events.filter((ev) => {
+    if (filterEmployee === 'all') return true;
+    const participants = ev.extendedProps?.participants || [];
+    return participants.some((p: any) => String(p.id) === String(filterEmployee));
+  });
+
   const handleExportCSV = () => {
-    if (!events || events.length === 0) {
+    if (!filteredEvents || filteredEvents.length === 0) {
       alert('ไม่มีข้อมูลกิจกรรมในปฏิทินสำหรับการส่งออก');
       return;
     }
@@ -299,7 +306,7 @@ export default function CalendarClient() {
       'ผู้เข้าร่วม'
     ];
 
-    const rows = events.map((ev) => {
+    const rows = filteredEvents.map((ev) => {
       const ext = ev.extendedProps || {};
       const participantsStr = Array.isArray(ext.participants) && ext.participants.length > 0
         ? ext.participants.map((p: any) => p.name).join(', ')
@@ -340,7 +347,7 @@ export default function CalendarClient() {
           <select 
             value={filterCategory} 
             onChange={(e) => setFilterCategory(e.target.value)}
-            className="border-2 border-indigo-200 rounded-lg px-4 py-2.5 text-base font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 min-w-[220px] bg-white shadow-sm transition-all"
+            className="border-2 border-indigo-200 rounded-lg px-4 py-2.5 text-base font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 min-w-[180px] bg-white shadow-sm transition-all"
           >
             <option value="all">-- แสดงทั้งหมด --</option>
             {categories.map(c => (
@@ -355,6 +362,21 @@ export default function CalendarClient() {
           >
             <Settings className="w-5 h-5" />
           </Button>
+
+          <label className="text-base font-semibold text-gray-800 whitespace-nowrap ml-1">บุคลากร:</label>
+          <select 
+            value={filterEmployee} 
+            onChange={(e) => setFilterEmployee(e.target.value)}
+            className="border-2 border-indigo-200 rounded-lg px-4 py-2.5 text-base font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 min-w-[200px] bg-white shadow-sm transition-all"
+          >
+            <option value="all">-- บุคลากรทั้งหมด --</option>
+            {employees.map(emp => (
+              <option key={emp.id} value={String(emp.id)}>
+                {emp.first_name} {emp.last_name} {emp.nickname ? `(${emp.nickname})` : ''}
+              </option>
+            ))}
+          </select>
+
           <Button 
             variant="outline"
             onClick={async () => {
@@ -405,7 +427,7 @@ export default function CalendarClient() {
         <FullCalendar
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
           initialView="dayGridMonth"
-          events={events}
+          events={filteredEvents}
           dateClick={handleDateClick}
           eventClick={handleEventClick}
           headerToolbar={{

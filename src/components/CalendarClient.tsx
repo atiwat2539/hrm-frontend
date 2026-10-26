@@ -6,7 +6,7 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import axios from 'axios';
-import { X, Settings, Edit2, Trash2, Plus, BellRing } from 'lucide-react';
+import { X, Settings, Edit2, Trash2, Plus, BellRing, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import TimePicker24 from '@/components/ui/TimePicker24';
 
@@ -262,11 +262,80 @@ export default function CalendarClient() {
     }
   };
 
+  const handleExportCSV = () => {
+    if (!events || events.length === 0) {
+      alert('ไม่มีข้อมูลกิจกรรมในปฏิทินสำหรับการส่งออก');
+      return;
+    }
+
+    const formatThaiDate = (dateStr?: string) => {
+      if (!dateStr) return '-';
+      const d = new Date(dateStr);
+      return d.toLocaleDateString('th-TH', { year: 'numeric', month: '2-digit', day: '2-digit' });
+    };
+
+    const formatTime24 = (dateStr?: string) => {
+      if (!dateStr) return '-';
+      const d = new Date(dateStr);
+      const h = String(d.getHours()).padStart(2, '0');
+      const m = String(d.getMinutes()).padStart(2, '0');
+      return `${h}:${m} น.`;
+    };
+
+    const escapeCsv = (val: any) => {
+      const str = String(val ?? '').replace(/\r?\n/g, ' ').replace(/"/g, '""');
+      return `"${str}"`;
+    };
+
+    const headers = [
+      'ชื่อกิจกรรม',
+      'หมวดหมู่',
+      'วันที่เริ่มต้น',
+      'เวลาเริ่มต้น',
+      'วันที่สิ้นสุด',
+      'เวลาสิ้นสุด',
+      'สถานที่',
+      'รายละเอียด',
+      'ผู้เข้าร่วม'
+    ];
+
+    const rows = events.map((ev) => {
+      const ext = ev.extendedProps || {};
+      const participantsStr = Array.isArray(ext.participants) && ext.participants.length > 0
+        ? ext.participants.map((p: any) => p.name).join(', ')
+        : '-';
+
+      return [
+        escapeCsv(ev.title || '-'),
+        escapeCsv(ext.category || '-'),
+        escapeCsv(formatThaiDate(ev.start)),
+        escapeCsv(formatTime24(ev.start)),
+        escapeCsv(formatThaiDate(ev.end || ev.start)),
+        escapeCsv(formatTime24(ev.end || ev.start)),
+        escapeCsv(ext.location || '-'),
+        escapeCsv(ext.description || '-'),
+        escapeCsv(participantsStr)
+      ];
+    });
+
+    const csvString = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const blob = new Blob(['\uFEFF' + csvString], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    const categorySuffix = filterCategory === 'all' ? 'ทั้งหมด' : filterCategory;
+    link.setAttribute('download', `Calendar_Events_${categorySuffix}_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="space-y-4 relative">
       {/* Filters & Actions */}
       <div className="flex flex-col md:flex-row items-center justify-between bg-gray-50 p-4 rounded-xl border border-gray-200 shadow-sm gap-4">
-        <div className="flex items-center space-x-3 w-full md:w-auto">
+        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
           <label className="text-base font-semibold text-gray-800 whitespace-nowrap">หมวดหมู่:</label>
           <select 
             value={filterCategory} 
@@ -304,22 +373,32 @@ export default function CalendarClient() {
           </Button>
         </div>
         
-        <Button 
-          onClick={() => {
-            setFormData({
-              ...formData,
-              start_date: new Date().toISOString().split('T')[0],
-              end_date: new Date().toISOString().split('T')[0],
-              category: categories.length > 0 ? categories[0].label : '',
-              color: categories.length > 0 ? categories[0].color : '#4f46e5'
-            });
-            setIsAddModalOpen(true);
-          }}
-          className="bg-indigo-600 hover:bg-indigo-700 text-base px-6 py-5 h-auto shadow-md w-full md:w-auto font-medium"
-        >
-          <Plus className="w-5 h-5 mr-2" />
-          เพิ่มกิจกรรม
-        </Button>
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <Button 
+            onClick={handleExportCSV}
+            className="bg-emerald-600 hover:bg-emerald-700 text-white text-base px-5 py-5 h-auto shadow-md flex-1 md:flex-initial font-medium"
+            title="ส่งออกข้อมูลกิจกรรมในปฏิทินเป็นไฟล์ CSV"
+          >
+            <Download className="w-5 h-5 mr-2" />
+            Export CSV
+          </Button>
+          <Button 
+            onClick={() => {
+              setFormData({
+                ...formData,
+                start_date: new Date().toISOString().split('T')[0],
+                end_date: new Date().toISOString().split('T')[0],
+                category: categories.length > 0 ? categories[0].label : '',
+                color: categories.length > 0 ? categories[0].color : '#4f46e5'
+              });
+              setIsAddModalOpen(true);
+            }}
+            className="bg-indigo-600 hover:bg-indigo-700 text-base px-6 py-5 h-auto shadow-md flex-1 md:flex-initial font-medium"
+          >
+            <Plus className="w-5 h-5 mr-2" />
+            เพิ่มกิจกรรม
+          </Button>
+        </div>
       </div>
 
       <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200">

@@ -6,7 +6,7 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import axios from 'axios';
-import { X, Settings, Edit2, Trash2, Plus, BellRing, Download } from 'lucide-react';
+import { X, Settings, Edit2, Trash2, Plus, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import TimePicker24 from '@/components/ui/TimePicker24';
 
@@ -376,23 +376,6 @@ export default function CalendarClient() {
               </option>
             ))}
           </select>
-
-          <Button 
-            variant="outline"
-            onClick={async () => {
-              try {
-                const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/cron/daily-calendar`);
-                alert(res.data.message || 'ส่งแจ้งเตือนเรียบร้อยแล้ว');
-              } catch (err: any) {
-                alert('เกิดข้อผิดพลาด: ' + (err.response?.data?.message || err.message));
-              }
-            }}
-            className="p-2.5 h-auto text-green-600 hover:text-green-700 hover:bg-green-50 border-2 border-green-200"
-            title="ทดสอบแจ้งเตือน LINE"
-          >
-            <BellRing className="w-5 h-5 mr-2" />
-            ทดสอบแจ้งเตือน LINE
-          </Button>
         </div>
         
         <div className="flex items-center gap-3 w-full md:w-auto">

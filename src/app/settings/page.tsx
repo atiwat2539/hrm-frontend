@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Settings as SettingsIcon, User, Lock, Bell, Shield, Save } from 'lucide-react';
+import { Settings as SettingsIcon, User, Lock, Bell, Shield, Save, BellRing, AlertCircle, RefreshCw, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function SettingsPage() {
@@ -18,6 +18,29 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+
+  // LINE Notification Test State
+  const [testingLine, setTestingLine] = useState(false);
+  const [lineStatus, setLineStatus] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  const handleTestLineNotify = async () => {
+    setTestingLine(true);
+    setLineStatus(null);
+    try {
+      const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/cron/daily-calendar`);
+      setLineStatus({
+        type: 'success',
+        text: res.data.message || 'ส่งข้อความแจ้งเตือนผ่าน LINE สำเร็จเรียบร้อยแล้ว'
+      });
+    } catch (err: any) {
+      setLineStatus({
+        type: 'error',
+        text: 'เกิดข้อผิดพลาดในการส่งแจ้งเตือน: ' + (err.response?.data?.message || err.message)
+      });
+    } finally {
+      setTestingLine(false);
+    }
+  };
 
   useEffect(() => {
     const userStr = localStorage.getItem('user');
@@ -205,8 +228,79 @@ export default function SettingsPage() {
 
           {activeTab === 'notifications' && (
             <div className="space-y-6">
-              <h2 className="text-xl font-bold text-gray-900 border-b pb-4">การตั้งค่าการแจ้งเตือน</h2>
-              <p className="text-gray-500">ส่วนนี้ยังอยู่ในระหว่างการพัฒนา จะพร้อมให้ตั้งค่าการเปิด/ปิดแจ้งเตือนทางอีเมลในเวอร์ชันถัดไป</p>
+              <div className="border-b pb-4">
+                <h2 className="text-xl font-bold text-gray-900">การตั้งค่าการแจ้งเตือน (Notifications)</h2>
+                <p className="text-sm text-gray-500 mt-1">จัดการระบบแจ้งเตือนภายนอกและการส่งข้อมูลสรุปประจำวัน</p>
+              </div>
+
+              {/* LINE Notification Card */}
+              <div className="bg-gradient-to-br from-emerald-50/70 to-white rounded-2xl border border-emerald-200 p-6 shadow-sm">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 rounded-2xl bg-[#06C755] flex items-center justify-center text-white shadow-md shrink-0">
+                      <BellRing className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-lg font-bold text-gray-900">การแจ้งเตือนผ่าน LINE (LINE Notification)</h3>
+                        <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                          พร้อมใช้งาน
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-600 mt-1">
+                        ระบบจะส่งข้อความสรุปกิจกรรมและนัดหมายในปฏิทินประจำวันไปยังกลุ่มหรือบัญชี LINE โดยอัตโนมัติ
+                      </p>
+                    </div>
+                  </div>
+
+                  <Button
+                    type="button"
+                    onClick={handleTestLineNotify}
+                    disabled={testingLine}
+                    className="bg-[#06C755] hover:bg-[#05b04c] text-white font-medium px-5 py-2.5 rounded-xl shadow-sm hover:shadow-md transition-all shrink-0 flex items-center justify-center gap-2 self-start md:self-auto"
+                  >
+                    {testingLine ? (
+                      <>
+                        <RefreshCw className="w-4 h-4 animate-spin" />
+                        กำลังส่งแจ้งเตือน...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-4 h-4" />
+                        ทดสอบส่งแจ้งเตือน LINE
+                      </>
+                    )}
+                  </Button>
+                </div>
+
+                {lineStatus && (
+                  <div
+                    className={`mt-4 p-4 rounded-xl text-sm flex items-start gap-2.5 animate-in fade-in duration-200 ${
+                      lineStatus.type === 'success'
+                        ? 'bg-emerald-100/70 text-emerald-900 border border-emerald-300'
+                        : 'bg-red-50 text-red-700 border border-red-200'
+                    }`}
+                  >
+                    {lineStatus.type === 'success' ? (
+                      <CheckCircle2 className="w-5 h-5 shrink-0 text-emerald-700 mt-0.5" />
+                    ) : (
+                      <AlertCircle className="w-5 h-5 shrink-0 text-red-600 mt-0.5" />
+                    )}
+                    <div>
+                      <p className="font-semibold">{lineStatus.type === 'success' ? 'สำเร็จ' : 'แจ้งเตือนผิดพลาด'}</p>
+                      <p className="mt-0.5">{lineStatus.text}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Other Notifications info */}
+              <div className="bg-gray-50 rounded-2xl border border-gray-100 p-6">
+                <h4 className="text-base font-semibold text-gray-800 mb-1">การแจ้งเตือนทางอีเมล (Email Notifications)</h4>
+                <p className="text-sm text-gray-500">
+                  ส่วนนี้ยังอยู่ในระหว่างการพัฒนา จะพร้อมให้ตั้งค่าการเปิด/ปิดแจ้งเตือนทางอีเมลในเวอร์ชันถัดไป
+                </p>
+              </div>
             </div>
           )}
 

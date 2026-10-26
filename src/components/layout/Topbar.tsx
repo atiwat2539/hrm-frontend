@@ -67,10 +67,19 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
   };
 
   useEffect(() => {
-    fetchNotifications();
-    // Refresh notifications every minute
-    const interval = setInterval(fetchNotifications, 60000);
-    return () => clearInterval(interval);
+    const initialTimeout = setTimeout(() => {
+      fetchNotifications();
+    }, 800);
+    // Refresh notifications every 5 minutes only when tab is active
+    const interval = setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        fetchNotifications();
+      }
+    }, 5 * 60 * 1000);
+    return () => {
+      clearTimeout(initialTimeout);
+      clearInterval(interval);
+    };
   }, []);
 
   // Search logic with debounce

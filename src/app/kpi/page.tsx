@@ -1,8 +1,23 @@
 'use client';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
-import { useState, useEffect, Fragment } from 'react';
-import { Target, TrendingUp, AlertTriangle, X, Plus, Edit2, Trash2, History, Eraser } from 'lucide-react';
+import { useState, useEffect, Fragment, useMemo } from 'react';
+import { 
+  Target, 
+  TrendingUp, 
+  AlertTriangle, 
+  X, 
+  Plus, 
+  Edit2, 
+  Trash2, 
+  History, 
+  Eraser, 
+  Copy, 
+  Calendar, 
+  AlertCircle,
+  Layers,
+  ChevronRight
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import axios from 'axios';
 
@@ -43,12 +58,27 @@ export default function KpiPage() {
     return d.getMonth() + 1 >= 6 ? d.getFullYear() + 1 : d.getFullYear();
   });
 
+  // Clone Workloads Modal State
+  const [isCloneModalOpen, setIsCloneModalOpen] = useState(false);
+  const [cloneSourceYear, setCloneSourceYear] = useState<number>(() => {
+    const d = new Date();
+    const curr = d.getMonth() + 1 >= 6 ? d.getFullYear() + 1 : d.getFullYear();
+    return curr;
+  });
+  const [cloneTargetYear, setCloneTargetYear] = useState<number>(() => {
+    const d = new Date();
+    const curr = d.getMonth() + 1 >= 6 ? d.getFullYear() + 1 : d.getFullYear();
+    return curr + 1;
+  });
+  const [cloning, setCloning] = useState(false);
+
   // Filter state
   const [selectedEmployeeFilter, setSelectedEmployeeFilter] = useState<string>('all');
   const [selectedStatusFilter, setSelectedStatusFilter] = useState<string>('all');
 
   const [formData, setFormData] = useState({
     employee_id: '',
+    year: '',
     title: '',         // ประเภทหัวข้อหลัก
     sub_title: '',     // หัวข้อย่อย
     description: '',   // รายละเอียดภาระงาน
@@ -58,18 +88,21 @@ export default function KpiPage() {
     weight: '100',     
   });
 
-  const fetchData = async () => {
+  const fetchData = async (targetYear = matrixYear) => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
       if (!token) return;
 
       const [kpiRes, empRes] = await Promise.all([
-        axios.get(API_URL, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(API_URL, { 
+          headers: { Authorization: `Bearer ${token}` },
+          params: { year: targetYear }
+        }),
         axios.get(EMP_API_URL, { headers: { Authorization: `Bearer ${token}` } })
       ]);
       
-      const sortedKpis = kpiRes.data.sort((a: any, b: any) => a.id - b.id);
+      const sortedKpis = kpiRes.data.sort((a: any, b: any) => (a.display_order ?? 0) - (b.display_order ?? 0) || a.id - b.id);
       setKpis(sortedKpis);
       setEmployees(empRes.data);
     } catch (err) {
@@ -80,13 +113,23 @@ export default function KpiPage() {
   };
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    fetchData(matrixYear);
+  }, [matrixYear]);
 
   const handleOpenModalForCreate = () => {
     setIsEditing(false);
     setEditingKpiId(null);
-    setFormData({ employee_id: '', title: '', sub_title: '', description: '', period: 'monthly', target: '', unit: '', weight: '100' });
+    setFormData({ 
+      employee_id: '', 
+      year: matrixYear.toString(), 
+      title: '', 
+      sub_title: '', 
+      description: '', 
+      period: 'monthly', 
+      target: '', 
+      unit: '', 
+      weight: '100' 
+    });
     setIsModalOpen(true);
   };
 
@@ -95,6 +138,7 @@ export default function KpiPage() {
     setEditingKpiId(kpi.id);
     setFormData({
       employee_id: kpi.employee_id.toString(),
+      year: (kpi.year || matrixYear).toString(),
       title: kpi.title,
       sub_title: kpi.sub_title || '',
       description: kpi.description || '',
@@ -115,6 +159,7 @@ export default function KpiPage() {
       
       const payload = {
         ...formData,
+        year: Number(formData.year || matrixYear),
         employee_id: Number(formData.employee_id),
         target: Number(formData.target),
         weight: Number(formData.weight)
@@ -131,15 +176,38 @@ export default function KpiPage() {
       }
       
       handleCloseModal();
-      fetchData(); // refresh list
+      fetchData(matrixYear); // refresh list
     } catch (err: any) {
       alert(err.response?.data?.message || 'Failed to save workload');
     }
   };
 
+  const handleCloneKpis = async () => {
+    if (cloneSourceYear === cloneTargetYear) {
+      alert('รอบปีต้นทางและรอบปีปลายทางต้องไม่เป็นปีเดียวกัน');
+      return;
+    }
 
+    setCloning(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.post(`${API_URL}/clone-year`, {
+        fromYear: cloneSourceYear,
+        toYear: cloneTargetYear
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
 
-  
+      alert(res.data.message || 'คัดลอกภาระงานเรียบร้อยแล้ว');
+      setIsCloneModalOpen(false);
+      setMatrixYear(cloneTargetYear);
+      fetchData(cloneTargetYear);
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'เกิดข้อผิดพลาดในการคัดลอกภาระงาน');
+    } finally {
+      setCloning(false);
+    }
+  };
 
   const handleDeleteResults = async (id: number) => {
     if (!confirm('ยืนยันการลบข้อมูลการบันทึกทั้งหมดของ KPI นี้? (หากลบแล้วข้อมูลยอดสะสมจะกลายเป็น 0)')) return;
@@ -148,20 +216,20 @@ export default function KpiPage() {
       await axios.delete(`${API_URL}/${id}/results`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      fetchData();
+      fetchData(matrixYear);
     } catch (err: any) {
       alert(err.response?.data?.message || 'Failed to clear results');
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('คุณแน่ใจหรือไม่ว่าต้องการลบภาระงานนี้? ข้อมูลยอดสะสมจะถูกลบไปด้วย')) return;
+    if (!confirm('คุณแน่ใจหรือไม่ว่าต้องการลบภาระงานนี้ออกจากรอบปีนี้? (ไม่ส่งผลกระทบต่อภาระงานของรอบปีอื่น)')) return;
     try {
       const token = localStorage.getItem('token');
       await axios.delete(`${API_URL}/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      fetchData();
+      fetchData(matrixYear);
     } catch (err: any) {
       alert(err.response?.data?.message || 'Failed to delete workload');
     }
@@ -169,9 +237,15 @@ export default function KpiPage() {
 
   const openMonthlyModal = (kpi: any) => {
     setSelectedKpiForMonthly(kpi);
+    const now = new Date();
+    const currMonth = now.getMonth() + 1;
+    // Calculate calendar year matching matrixYear cycle:
+    // months 6-12 -> matrixYear - 1, months 1-5 -> matrixYear
+    const calcCalYear = currMonth >= 6 && currMonth <= 12 ? matrixYear - 1 : matrixYear;
+    
     setMonthlyData({
-      month: new Date().getMonth() + 1 + '',
-      year: new Date().getFullYear(),
+      month: currMonth + '',
+      year: calcCalYear,
       actual: '',
       note: ''
     });
@@ -199,7 +273,7 @@ export default function KpiPage() {
       });
 
       closeMonthlyModal();
-      fetchData();
+      fetchData(matrixYear);
     } catch (err: any) {
       alert('Failed to save monthly result');
     }
@@ -244,20 +318,43 @@ export default function KpiPage() {
   // Extract unique main topics for the datalist dropdown
   const uniqueMainTopics = Array.from(new Set(kpis.map(k => k.title))).filter(Boolean);
 
-
   return (
     <div className="space-y-6 relative">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Workload & KPI Management</h1>
-          <p className="text-sm text-gray-500">มอบหมายภาระงานรายบุคคลและอัปเดตตัวเลขแบบสะสมยอด</p>
+          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+            <Target className="w-7 h-7 text-indigo-600" />
+            การจัดการภาระงานและตัวชี้วัด (Workload & KPI Management)
+          </h1>
+          <p className="text-sm text-gray-500 mt-1">
+            มอบหมายภาระงานรายบุคคล แยกตามรอบปีการประเมิน พร้อมบันทึกผลงานสะสมรายเดือน
+          </p>
         </div>
-        <Button onClick={handleOpenModalForCreate} className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white whitespace-nowrap px-8 py-6 text-lg font-bold rounded-xl shadow-lg hover:shadow-xl hover:shadow-indigo-500/40 transition-all duration-300 hover:scale-[1.02] active:scale-95">
-          <Target className="w-5 h-5 mr-2" />
-          มอบหมายภาระงาน
-        </Button>
+        <div className="flex flex-wrap items-center gap-2.5">
+          <Button 
+            onClick={() => {
+              setCloneSourceYear(matrixYear - 1);
+              setCloneTargetYear(matrixYear);
+              setIsCloneModalOpen(true);
+            }} 
+            variant="outline"
+            className="border-indigo-200 text-indigo-700 hover:bg-indigo-50 font-medium px-4 py-2.5 rounded-xl transition-all shadow-sm flex items-center gap-2"
+          >
+            <Copy className="w-4 h-4" />
+            คัดลอกภาระงานข้ามรอบปี
+          </Button>
+
+          <Button 
+            onClick={handleOpenModalForCreate} 
+            className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white whitespace-nowrap px-6 py-2.5 text-base font-semibold rounded-xl shadow-md hover:shadow-lg hover:shadow-indigo-500/30 transition-all duration-300 hover:scale-[1.02] active:scale-95"
+          >
+            <Plus className="w-5 h-5 mr-1.5" />
+            มอบหมายภาระงาน
+          </Button>
+        </div>
       </div>
 
+      {/* KPI Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <div 
           onClick={() => setSelectedStatusFilter('all')}
@@ -265,7 +362,7 @@ export default function KpiPage() {
         >
           <div className="p-3 bg-blue-100 rounded-full text-blue-600 transition-all duration-300 group-hover:scale-110"><Target className="w-6 h-6" /></div>
           <div>
-            <p className="text-sm text-gray-500">ภาระงานทั้งหมด</p>
+            <p className="text-sm text-gray-500">ภาระงานทั้งหมด ({matrixYear + 543})</p>
             <p className="text-2xl font-bold text-gray-900">{totalKpis}</p>
           </div>
         </div>
@@ -304,7 +401,7 @@ export default function KpiPage() {
         </div>
       </div>
 
-      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
         <div className="flex flex-col md:flex-row justify-between items-center mb-4 gap-4">
           <div className="flex items-center space-x-4">
             <h3 className="text-lg font-semibold text-gray-900">รายการภาระงานรายบุคคล</h3>
@@ -324,28 +421,32 @@ export default function KpiPage() {
             </div>
           </div>
           
-          <div className="flex items-center space-x-3">
-              <div className="flex items-center space-x-2 mr-2">
-                <label className="text-sm font-medium text-gray-700">รอบปี:</label>
-                <select 
-                  value={matrixYear} 
-                  onChange={e => setMatrixYear(Number(e.target.value))}
-                  className="border border-gray-300 rounded-md px-3 py-1.5 text-sm bg-white"
-                >
-                  {[2, 1, 0, -1, -2].map(offset => {
-                    const y = new Date().getFullYear() + offset;
-                    return (
-                      <option key={y} value={y}>{y + 543}</option>
-                    )
-                  })}
-                </select>
-              </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center space-x-2">
+              <label className="text-sm font-medium text-gray-700 flex items-center gap-1">
+                <Calendar className="w-4 h-4 text-indigo-600" />
+                รอบปี:
+              </label>
+              <select 
+                value={matrixYear} 
+                onChange={e => setMatrixYear(Number(e.target.value))}
+                className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm font-semibold text-indigo-700 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                {[3, 2, 1, 0, -1, -2].map(offset => {
+                  const y = new Date().getFullYear() + offset;
+                  return (
+                    <option key={y} value={y}>พ.ศ. {y + 543}</option>
+                  );
+                })}
+              </select>
+            </div>
+
             <div className="flex items-center space-x-2">
               <label className="text-sm font-medium text-gray-700">เลือกบุคลากร:</label>
               <select 
                 value={selectedEmployeeFilter} 
                 onChange={e => setSelectedEmployeeFilter(e.target.value)}
-                className="border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 min-w-[200px] bg-white"
+                className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 min-w-[200px] bg-white"
               >
                 <option value="all">-- แสดงทั้งหมด --</option>
                 {employees.map(emp => (
@@ -358,6 +459,42 @@ export default function KpiPage() {
           </div>
         </div>
         
+        {/* Empty state notice if current year has no KPIs */}
+        {!loading && kpis.length === 0 && (
+          <div className="text-center py-12 px-6 bg-gradient-to-br from-indigo-50/60 via-white to-purple-50/40 rounded-2xl border-2 border-dashed border-indigo-200/90 my-4">
+            <div className="w-14 h-14 bg-indigo-100 rounded-2xl flex items-center justify-center text-indigo-600 mx-auto mb-3.5 shadow-sm">
+              <Copy className="w-7 h-7" />
+            </div>
+            <h3 className="text-lg font-bold text-gray-900 mb-1">
+              ยังไม่มีการกำหนดภาระงานสำหรับรอบปี {matrixYear + 543}
+            </h3>
+            <p className="text-sm text-gray-500 max-w-md mx-auto mb-6">
+              ท่านสามารถคัดลอกรายการภาระงานจากรอบปี {matrixYear - 1 + 543} มาตั้งต้นใหม่สำหรับรอบปีนี้ได้ทันที (ผลงานสะสมจะเริ่มนับ 0 ใหม่ทั้งหมด) หรือมอบหมายภาระงานใหม่ด้วยตนเอง
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-3">
+              <Button
+                onClick={() => {
+                  setCloneSourceYear(matrixYear - 1);
+                  setCloneTargetYear(matrixYear);
+                  setIsCloneModalOpen(true);
+                }}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-5 py-2.5 rounded-xl shadow-md hover:shadow-lg transition-all"
+              >
+                <Copy className="w-4 h-4 mr-2" />
+                คัดลอกภาระงานจากรอบปี {matrixYear - 1 + 543}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={handleOpenModalForCreate}
+                className="border-gray-300 hover:bg-gray-50 text-gray-700 font-medium px-5 py-2.5 rounded-xl"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                มอบหมายภาระงานใหม่
+              </Button>
+            </div>
+          </div>
+        )}
+
         <div className="overflow-x-auto">
           {loading ? (
              <LoadingSpinner />
@@ -386,7 +523,7 @@ export default function KpiPage() {
               </thead>
               <tbody>
                 {Object.keys(groupedKpis).length === 0 ? (
-                  <tr><td colSpan={17} className="text-center py-4">ไม่มีข้อมูลภาระงาน</td></tr>
+                  <tr><td colSpan={17} className="text-center py-6 text-gray-400">ไม่มีข้อมูลภาระงานในรอบปีนี้</td></tr>
                 ) : (
                   (Object.entries(groupedKpis) as any).map((entry: any) => {
                     const [mainTopic, topicKpis] = entry;
@@ -398,8 +535,6 @@ export default function KpiPage() {
                         </td>
                       </tr>
                       {topicKpis.map((kpi: any) => {
-                        // Calculate monthly sums for this Fiscal Year (Jun - May)
-                        // Index: 0=Jun, 1=Jul, 2=Aug, 3=Sep, 4=Oct, 5=Nov, 6=Dec, 7=Jan, 8=Feb, 9=Mar, 10=Apr, 11=May
                         const monthlySums = Array(12).fill(0);
                         if (kpi.results) {
                           kpi.results.forEach((r: any) => {
@@ -465,7 +600,7 @@ export default function KpiPage() {
               </thead>
               <tbody>
                 {Object.keys(groupedKpis).length === 0 ? (
-                  <tr><td colSpan={9} className="text-center py-4">ไม่มีข้อมูลภาระงาน</td></tr>
+                  <tr><td colSpan={9} className="text-center py-6 text-gray-400">ไม่มีข้อมูลภาระงานในรอบปีนี้</td></tr>
                 ) : (
                   (Object.entries(groupedKpis) as any).map((entry: any) => {
                     const [mainTopic, topicKpis] = entry;
@@ -518,36 +653,32 @@ export default function KpiPage() {
                           
                           {/* Accumulated Total */}
                           <td className="px-4 py-4">
-                            <div className="flex flex-col items-start">
-                              <span className="font-bold text-indigo-600 text-lg">{fyTotal}</span>
-                              
-                            </div>
+                            <span className="font-bold text-indigo-600 text-lg">{fyTotal}</span>
+                            <span className="text-xs text-gray-400 ml-1">/ {kpi.target}</span>
                           </td>
-                          
-                          <td className="px-4 py-4 text-gray-500">{kpi.unit}</td>
+
+                          <td className="px-4 py-4">{kpi.unit}</td>
                           <td className="px-4 py-4">
-                            <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${statusClass}`}>
+                            <span className={`px-2.5 py-1 text-xs font-semibold rounded-full ${statusClass}`}>
                               {statusLabel}
                             </span>
                           </td>
-
-                          {/* Inline Add Actual Value */}
+                          
+                          {/* Record monthly button */}
                           <td className="px-4 py-4 text-center">
                             <Button 
-                              variant="outline" 
-                              size="sm" 
-                              className="text-indigo-600 border-indigo-200 hover:bg-indigo-50"
                               onClick={() => openMonthlyModal(kpi)}
+                              size="sm"
+                              className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200"
                             >
                               <Plus className="w-4 h-4 mr-1" />
                               บันทึกผล
                             </Button>
                           </td>
 
+                          {/* Action Buttons */}
                           <td className="px-4 py-4 text-center">
                             <div className="flex items-center justify-center space-x-1">
-                              
-
                               {/* History */}
                               <button 
                                 onClick={() => { setSelectedKpiHistory({...kpi, results: yearResults}); setIsHistoryModalOpen(true); }}
@@ -577,7 +708,7 @@ export default function KpiPage() {
                               <button 
                                 onClick={() => handleDelete(kpi.id)}
                                 className="p-1.5 text-red-600 hover:bg-red-50 rounded"
-                                title="ลบ"
+                                title="ลบภาระงานนี้ออกจากรอบปีนี้"
                               >
                                 <Trash2 className="w-4 h-4" />
                               </button>
@@ -595,11 +726,17 @@ export default function KpiPage() {
         </div>
       </div>
 
+      {/* Create / Edit Workload Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 max-h-screen overflow-y-auto animate-in fade-in zoom-in-95 duration-200">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold">{isEditing ? 'แก้ไขภาระงาน' : 'เพิ่มภาระงานรายบุคคล'}</h2>
+              <div>
+                <h2 className="text-xl font-bold">{isEditing ? 'แก้ไขภาระงาน' : 'เพิ่มภาระงานรายบุคคล'}</h2>
+                <p className="text-xs text-indigo-600 font-semibold mt-0.5">
+                  สำหรับรอบปีการประเมิน: พ.ศ. {Number(formData.year || matrixYear) + 543}
+                </p>
+              </div>
               <button onClick={handleCloseModal} className="text-gray-500 hover:text-gray-700">
                 <X className="w-5 h-5" />
               </button>
@@ -607,8 +744,8 @@ export default function KpiPage() {
             
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-1">เลือก User</label>
-                <select required value={formData.employee_id} onChange={e => setFormData({...formData, employee_id: e.target.value})} className="w-full border rounded-md px-3 py-2 text-sm">
+                <label className="block text-sm font-medium mb-1">เลือกบุคลากร</label>
+                <select required value={formData.employee_id} onChange={e => setFormData({...formData, employee_id: e.target.value})} className="w-full border rounded-md px-3 py-2 text-sm bg-white">
                   <option value="">-- กรุณาเลือกบุคลากร --</option>
                   {employees.map(emp => (
                     <option key={emp.id} value={emp.id}>{emp.first_name} {emp.last_name}</option>
@@ -636,7 +773,7 @@ export default function KpiPage() {
 
               <div>
                 <label className="block text-sm font-medium mb-1">หัวข้อย่อย (Sub Topic)</label>
-                <input value={formData.sub_title} onChange={e => setFormData({...formData, sub_title: e.target.value})} type="text" className="w-full border rounded-md px-3 py-2 text-sm" placeholder="เช่น สร้างหน้า Login (ระบุหรือไม่ก็ได้)" />
+                <input value={formData.sub_title} onChange={e => setFormData({...formData, sub_title: e.target.value})} type="text" className="w-full border rounded-md px-3 py-2 text-sm" placeholder="เช่น บริการยืม-คืนทรัพยากรสารสนเทศ (ระบุหรือไม่ก็ได้)" />
               </div>
 
               <div>
@@ -665,9 +802,11 @@ export default function KpiPage() {
                 </div>
               </div>
 
-              <div className="flex justify-end space-x-3 pt-4">
+              <div className="flex justify-end space-x-3 pt-4 border-t">
                 <Button type="button" variant="outline" onClick={handleCloseModal}>ยกเลิก</Button>
-                <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700">บันทึกข้อมูล</Button>
+                <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700">
+                  {isEditing ? 'บันทึกการแก้ไข' : 'บันทึกข้อมูล'}
+                </Button>
               </div>
             </form>
           </div>
@@ -682,6 +821,7 @@ export default function KpiPage() {
               <div>
                 <h2 className="text-xl font-bold">บันทึกผลการปฏิบัติงาน</h2>
                 <p className="text-sm text-gray-500 mt-1">{selectedKpiForMonthly.title} - {selectedKpiForMonthly.sub_title}</p>
+                <p className="text-xs text-indigo-600 font-semibold mt-0.5">รอบปีประเมิน พ.ศ. {matrixYear + 543}</p>
               </div>
               <button onClick={closeMonthlyModal} className="text-gray-500 hover:text-gray-700 bg-gray-100 p-1.5 rounded-full">
                 <X className="w-5 h-5" />
@@ -692,12 +832,16 @@ export default function KpiPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-1">เดือน</label>
-                  <select required value={monthlyData.month} onChange={e => setMonthlyData({...monthlyData, month: e.target.value})} className="w-full border rounded-md px-3 py-2 text-sm bg-white">
-                    <option value="1">มกราคม (Jan)</option>
-                    <option value="2">กุมภาพันธ์ (Feb)</option>
-                    <option value="3">มีนาคม (Mar)</option>
-                    <option value="4">เมษายน (Apr)</option>
-                    <option value="5">พฤษภาคม (May)</option>
+                  <select 
+                    required 
+                    value={monthlyData.month} 
+                    onChange={e => {
+                      const m = parseInt(e.target.value);
+                      const calYear = m >= 6 && m <= 12 ? matrixYear - 1 : matrixYear;
+                      setMonthlyData({...monthlyData, month: e.target.value, year: calYear});
+                    }} 
+                    className="w-full border rounded-md px-3 py-2 text-sm bg-white"
+                  >
                     <option value="6">มิถุนายน (Jun)</option>
                     <option value="7">กรกฎาคม (Jul)</option>
                     <option value="8">สิงหาคม (Aug)</option>
@@ -705,10 +849,15 @@ export default function KpiPage() {
                     <option value="10">ตุลาคม (Oct)</option>
                     <option value="11">พฤศจิกายน (Nov)</option>
                     <option value="12">ธันวาคม (Dec)</option>
+                    <option value="1">มกราคม (Jan)</option>
+                    <option value="2">กุมภาพันธ์ (Feb)</option>
+                    <option value="3">มีนาคม (Mar)</option>
+                    <option value="4">เมษายน (Apr)</option>
+                    <option value="5">พฤษภาคม (May)</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">ปี (พ.ศ.)</label>
+                  <label className="block text-sm font-medium mb-1">ปีปฏิทิน (พ.ศ.)</label>
                   <input required type="number" value={monthlyData.year + 543} onChange={e => setMonthlyData({...monthlyData, year: Number(e.target.value) - 543})} className="w-full border rounded-md px-3 py-2 text-sm" />
                 </div>
               </div>
@@ -747,6 +896,7 @@ export default function KpiPage() {
                 <p className="text-sm text-indigo-600 font-medium mt-1">
                   {selectedKpiHistory.title} {selectedKpiHistory.sub_title ? `- ${selectedKpiHistory.sub_title}` : ''}
                 </p>
+                <p className="text-xs text-gray-500 mt-0.5">รอบปีการประเมิน พ.ศ. {matrixYear + 543}</p>
               </div>
               <button onClick={() => setIsHistoryModalOpen(false)} className="text-gray-500 hover:text-gray-700 bg-gray-100 p-1.5 rounded-full">
                 <X className="w-5 h-5" />
@@ -758,42 +908,122 @@ export default function KpiPage() {
                 <thead className="text-xs text-gray-700 uppercase bg-gray-50 sticky top-0">
                   <tr>
                     <th className="px-4 py-3">เดือน/ปี</th>
-                    <th className="px-4 py-3">ยอดที่ทำได้</th>
+                    <th className="px-4 py-3 text-right">ผลงานที่บันทึก</th>
                     <th className="px-4 py-3">หมายเหตุ</th>
                     <th className="px-4 py-3">วันที่บันทึก</th>
                   </tr>
                 </thead>
-                <tbody>
-                  {selectedKpiHistory.results?.length === 0 ? (
-                    <tr><td colSpan={4} className="text-center py-6 text-gray-500">ไม่มีประวัติการบันทึก</td></tr>
-                  ) : (
-                    selectedKpiHistory.results?.map((res: any) => {
-                      const monthNames = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
-                      const mIdx = parseInt(res.month) - 1;
-                      const mName = (mIdx >= 0 && mIdx < 12) ? monthNames[mIdx] : res.month;
-                      
+                <tbody className="divide-y divide-gray-100">
+                  {selectedKpiHistory.results && selectedKpiHistory.results.length > 0 ? (
+                    selectedKpiHistory.results.map((r: any) => {
+                      const monthNames = ['', 'ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+                      const mNum = parseInt(r.month);
                       return (
-                        <tr key={res.id} className="border-b hover:bg-gray-50">
-                          <td className="px-4 py-3 font-medium text-gray-900">{mName} {res.year + 543}</td>
-                          <td className="px-4 py-3 font-bold text-indigo-600">+{res.actual} <span className="text-xs font-normal text-gray-500">{selectedKpiHistory.unit}</span></td>
-                          <td className="px-4 py-3">{res.note || '-'}</td>
-                          <td className="px-4 py-3 text-xs text-gray-500">
-                            {new Date(res.created_at).toLocaleDateString('th-TH')} {new Date(res.created_at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', hour12: false })} น.
+                        <tr key={r.id} className="hover:bg-gray-50">
+                          <td className="px-4 py-3 font-medium text-gray-900">
+                            {monthNames[mNum]} {r.year + 543}
+                          </td>
+                          <td className="px-4 py-3 text-right font-bold text-emerald-600">
+                            +{r.actual} {selectedKpiHistory.unit}
+                          </td>
+                          <td className="px-4 py-3 text-gray-500 max-w-xs truncate">
+                            {r.note || '-'}
+                          </td>
+                          <td className="px-4 py-3 text-xs text-gray-400">
+                            {new Date(r.created_at).toLocaleDateString('th-TH', { hour12: false, hour: '2-digit', minute: '2-digit' })} น.
                           </td>
                         </tr>
                       );
                     })
+                  ) : (
+                    <tr>
+                      <td colSpan={4} className="text-center py-6 text-gray-400">ยังไม่มีประวัติการบันทึกในรอบปีนี้</td>
+                    </tr>
                   )}
                 </tbody>
               </table>
             </div>
 
-            <div className="mt-4 pt-4 border-t flex justify-end">
-              <Button variant="outline" onClick={() => setIsHistoryModalOpen(false)}>ปิดหน้าต่าง</Button>
+            <div className="flex justify-end pt-4 border-t mt-4">
+              <Button onClick={() => setIsHistoryModalOpen(false)}>ปิด</Button>
             </div>
           </div>
         </div>
       )}
+
+      {/* Clone Workloads Modal */}
+      {isCloneModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex justify-between items-center mb-4 border-b pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center text-indigo-600">
+                  <Copy className="w-5 h-5" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900">คัดลอกภาระงานข้ามรอบปี</h2>
+                  <p className="text-xs text-gray-500">นำรายการภาระงานจากรอบปีเดิมมาตั้งต้นในรอบปีใหม่</p>
+                </div>
+              </div>
+              <button onClick={() => setIsCloneModalOpen(false)} className="text-gray-500 hover:text-gray-700 bg-gray-100 p-1.5 rounded-full">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="bg-amber-50 border border-amber-200 text-amber-800 p-3.5 rounded-xl text-xs flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0 text-amber-600 mt-0.5" />
+                <div>
+                  <span className="font-semibold">หลักการทำงาน: </span>
+                  ระบบจะคัดลอกเฉพาะโครงสร้างภาระงาน (ชื่อภาระงาน, รายละเอียด, เป้าหมาย, ค่าน้ำหนัก) ไปยังรอบปีใหม่ โดยผลการปฏิบัติงานสะสมจะเริ่มนับ 0 ใหม่ทั้งหมด และจะไม่กระทบต่อข้อมูลของรอบปีเดิม
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">รอบปีต้นทาง (ที่จะคัดลอก)</label>
+                  <select
+                    value={cloneSourceYear}
+                    onChange={e => setCloneSourceYear(Number(e.target.value))}
+                    className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  >
+                    {[3, 2, 1, 0, -1, -2].map(offset => {
+                      const y = new Date().getFullYear() + offset;
+                      return <option key={y} value={y}>รอบปี พ.ศ. {y + 543}</option>;
+                    })}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">รอบปีปลายทาง (ที่จะนำไปใช้)</label>
+                  <select
+                    value={cloneTargetYear}
+                    onChange={e => setCloneTargetYear(Number(e.target.value))}
+                    className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  >
+                    {[3, 2, 1, 0, -1, -2].map(offset => {
+                      const y = new Date().getFullYear() + offset;
+                      return <option key={y} value={y}>รอบปี พ.ศ. {y + 543}</option>;
+                    })}
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-4 border-t">
+                <Button type="button" variant="outline" onClick={() => setIsCloneModalOpen(false)}>ยกเลิก</Button>
+                <Button
+                  type="button"
+                  onClick={handleCloneKpis}
+                  disabled={cloning}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium"
+                >
+                  {cloning ? 'กำลังคัดลอก...' : 'ยืนยันการคัดลอกภาระงาน'}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

@@ -2,12 +2,13 @@
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 import { useState, useEffect } from 'react';
-import { Users, UserPlus, Target, Clock, X, MapPin, AlignLeft, RefreshCw, Wind, ShieldAlert, Sun } from 'lucide-react';
+import { Users, UserPlus, Target, Clock, X, MapPin, AlignLeft, RefreshCw, Wind, ShieldAlert, Sun, Calendar } from 'lucide-react';
 import { 
   LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer 
 } from 'recharts';
 import axios from 'axios';
+import Link from 'next/link';
 
 export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
@@ -19,6 +20,12 @@ export default function DashboardPage() {
   const [isWeatherModalOpen, setIsWeatherModalOpen] = useState(false);
   const [isAqiModalOpen, setIsAqiModalOpen] = useState(false);
   const [isRefreshingAqi, setIsRefreshingAqi] = useState(false);
+
+  // Selected Evaluation Round (Fiscal Year)
+  const [selectedYear, setSelectedYear] = useState<number>(() => {
+    const d = new Date();
+    return d.getMonth() + 1 >= 6 ? d.getFullYear() + 1 : d.getFullYear();
+  });
 
   const fetchWeather = async (showSpinner = false) => {
     try {
@@ -89,31 +96,35 @@ export default function DashboardPage() {
     }
   };
 
+  const fetchDashboardStats = async (year = selectedYear) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) setUser(JSON.parse(storedUser));
+
+      const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/dashboard/stats`, {
+        headers: { Authorization: `Bearer ${token}` },
+        params: { year }
+      });
+      setDashboardData(res.data);
+    } catch (err) {
+      console.error('Failed to fetch dashboard stats', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchDashboardStats = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) return;
-
-        const storedUser = localStorage.getItem('user');
-        if (storedUser) setUser(JSON.parse(storedUser));
-
-        const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/dashboard/stats`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setDashboardData(res.data);
-      } catch (err) {
-        console.error('Failed to fetch dashboard stats', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchWeather();
-    fetchDashboardStats();
     const aqiInterval = setInterval(() => fetchWeather(false), 60 * 60 * 1000);
     return () => clearInterval(aqiInterval);
   }, []);
+
+  useEffect(() => {
+    fetchDashboardStats(selectedYear);
+  }, [selectedYear]);
 
   if (loading) {
     return (
@@ -150,9 +161,30 @@ export default function DashboardPage() {
   const todayEvents = dashboardData?.todayEvents || [];
 
   const stats = [
-    { name: 'บุคลากรทั้งหมด', value: totalEmployees.toString(), icon: Users, change: 'จำนวนปัจจุบัน', changeType: 'positive', color: '#B3C2F2' },
-    { name: 'เป้าหมาย KPI ทั้งหมด', value: totalKpis.toString(), icon: Target, change: 'หัวข้อประเมิน', changeType: 'positive', color: '#F4D8D8' },
-    { name: 'KPI ที่สำเร็จ', value: kpiCompleted, icon: Target, change: 'อัตราภาพรวม', changeType: 'positive', color: '#D1E8E2' },
+    { 
+      name: 'บุคลากรทั้งหมด', 
+      value: totalEmployees.toString(), 
+      icon: Users, 
+      change: 'จำนวนปัจจุบัน', 
+      changeType: 'positive', 
+      color: '#B3C2F2' 
+    },
+    { 
+      name: `เป้าหมาย KPI (พ.ศ. ${selectedYear + 543})`, 
+      value: totalKpis.toString(), 
+      icon: Target, 
+      change: `หัวข้อประเมินปี ${selectedYear + 543}`, 
+      changeType: 'positive', 
+      color: '#F4D8D8' 
+    },
+    { 
+      name: `KPI ที่สำเร็จ (พ.ศ. ${selectedYear + 543})`, 
+      value: kpiCompleted, 
+      icon: Target, 
+      change: `คะแนนเฉลี่ย ${averageKpiScore}`, 
+      changeType: 'positive', 
+      color: '#D1E8E2' 
+    },
   ];
 
   // Pantone 2026 Cloud Dancer (#F0EEE9) and complementary soft pastels
@@ -164,9 +196,31 @@ export default function DashboardPage() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-3xl font-extrabold text-gray-800 tracking-tight">สวัสดี, {user?.username || 'ผู้ใช้งาน'}</h1>
-          <p className="text-sm text-gray-600 mt-1">ภาพรวมการปฏิบัติงาน</p>
+          <p className="text-sm text-gray-600 mt-1">ภาพรวมการปฏิบัติงานและตัวชี้วัด</p>
         </div>
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Evaluation Year Selector */}
+          <div className="bg-white/80 backdrop-blur px-4 py-2 rounded-2xl shadow-sm border border-[#F0EEE9] font-medium flex items-center gap-2 hover:border-indigo-300 transition-colors">
+            <Target className="w-4 h-4 text-indigo-600 shrink-0" />
+            <span className="text-xs text-gray-500 font-semibold whitespace-nowrap">รอบปีประเมิน:</span>
+            <select
+              value={selectedYear}
+              onChange={e => setSelectedYear(Number(e.target.value))}
+              className="bg-transparent text-sm font-bold text-indigo-700 outline-none cursor-pointer pr-1"
+            >
+              {[3, 2, 1, 0, -1, -2].map(offset => {
+                const y = new Date().getFullYear() + offset;
+                const currentSystemFy = new Date().getMonth() + 1 >= 6 ? new Date().getFullYear() + 1 : new Date().getFullYear();
+                const isCurrent = y === currentSystemFy;
+                return (
+                  <option key={y} value={y}>
+                    พ.ศ. {y + 543} {isCurrent ? '(ปัจจุบัน)' : ''}
+                  </option>
+                );
+              })}
+            </select>
+          </div>
+
           {weather && (
             <>
               <div 
@@ -290,12 +344,16 @@ export default function DashboardPage() {
 
         {/* KPI Distribution Chart */}
         <div className="bg-white p-6 rounded-3xl shadow-sm border border-[#F0EEE9] hover:shadow-xl transition-all duration-300 flex flex-col min-h-[450px]">
-          <h3 className="text-xl font-bold text-gray-800 mb-2">สถานะ KPI ภาพรวม</h3>
-          <p className="text-sm text-gray-500 mb-6">สัดส่วนความสำเร็จของบุคลากร</p>
+          <h3 className="text-xl font-bold text-gray-800 mb-1">สถานะ KPI ภาพรวม</h3>
+          <p className="text-sm text-gray-500 mb-6">รอบปีการประเมิน พ.ศ. {selectedYear + 543}</p>
           <div className="flex-1 w-full relative">
-            {kpiData.every((d: any) => d.value === 0) ? (
-              <div className="flex h-full items-center justify-center text-gray-400 font-medium">
-                ไม่มีข้อมูล KPI
+            {totalKpis === 0 || kpiData.every((d: any) => d.value === 0) ? (
+              <div className="flex flex-col h-full items-center justify-center text-gray-400 font-medium text-center p-4">
+                <Target className="w-10 h-10 mb-2 text-gray-300" />
+                <p>ยังไม่มีข้อมูล KPI ในรอบปี พ.ศ. {selectedYear + 543}</p>
+                <Link href="/kpi" className="mt-2 text-xs text-indigo-600 font-semibold hover:underline">
+                  ไปที่หน้าจัดการภาระงาน (KPI) →
+                </Link>
               </div>
             ) : (
               <ResponsiveContainer width="100%" height="100%">
@@ -328,10 +386,24 @@ export default function DashboardPage() {
 
       {/* Individual Progress Bars */}
       <div className="bg-white p-8 rounded-3xl shadow-sm border border-[#F0EEE9] hover:shadow-xl transition-all duration-300">
-        <h3 className="text-xl font-bold text-gray-800 mb-6">ความก้าวหน้าในการทำงานของบุคลากร</h3>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-2">
+          <div>
+            <h3 className="text-xl font-bold text-gray-800">ความก้าวหน้าในการทำงานของบุคลากร</h3>
+            <p className="text-sm text-gray-500 mt-0.5">ผลสัมฤทธิ์ตามภาระงานรอบปี พ.ศ. {selectedYear + 543}</p>
+          </div>
+          <Link href="/kpi" className="text-xs text-indigo-600 font-semibold hover:underline">
+            ดูตารางคะแนนทั้งหมด →
+          </Link>
+        </div>
+        
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {!dashboardData?.individualKpiData || dashboardData.individualKpiData.length === 0 ? (
-            <div className="text-center text-gray-400 py-4 col-span-full">ไม่มีข้อมูลความก้าวหน้าบุคลากร</div>
+            <div className="text-center text-gray-400 py-6 col-span-full">
+              <p>ไม่มีข้อมูลความก้าวหน้าบุคลากรในรอบปี พ.ศ. {selectedYear + 543}</p>
+              <Link href="/kpi" className="mt-2 inline-block text-xs text-indigo-600 font-semibold hover:underline">
+                ไปที่หน้าจัดการภาระงาน (KPI) →
+              </Link>
+            </div>
           ) : (
             dashboardData.individualKpiData.map((emp: any, idx: number) => (
               <div key={idx} className="flex flex-col gap-2">
@@ -455,216 +527,154 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Weather Modal */}
+      {/* Weather Forecast Modal */}
       {isWeatherModalOpen && weather && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setIsWeatherModalOpen(false)}>
-          <div className="bg-white rounded-3xl p-6 md:p-8 w-full max-w-lg shadow-2xl relative" onClick={e => e.stopPropagation()}>
-            <button 
-              onClick={() => setIsWeatherModalOpen(false)}
-              className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <div className="text-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-900 mb-1">พยากรณ์อากาศ เชียงใหม่</h2>
-              <p className="text-gray-500">พยากรณ์ล่วงหน้า 7 วัน (Open-Meteo)</p>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-md flex items-center justify-center z-50 p-4 transition-all duration-300">
+          <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-lg p-6 md:p-8 flex flex-col relative animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex justify-between items-center mb-6 pb-4 border-b border-[#F0EEE9]">
+              <div className="flex items-center gap-3">
+                <span className="text-3xl">{weather.icon}</span>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-800">พยากรณ์อากาศล่วงหน้า 7 วัน</h3>
+                  <p className="text-sm text-gray-500">จังหวัดเชียงใหม่</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setIsWeatherModalOpen(false)} 
+                className="text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-full p-2 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
             </div>
 
-            <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-2">
-              {weather.daily?.map((d: any, idx: number) => {
-                const dateObj = new Date(d.date);
+            <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
+              {weather.daily.map((day: any, idx: number) => {
+                const dateObj = new Date(day.date);
                 const isToday = idx === 0;
                 return (
-                  <div key={idx} className={`flex items-center justify-between p-4 rounded-2xl ${isToday ? 'bg-indigo-50 border border-indigo-100' : 'bg-gray-50'}`}>
-                    <div className="flex items-center space-x-4">
-                      <div className="text-2xl drop-shadow-sm">{d.icon}</div>
+                  <div key={idx} className={`flex items-center justify-between p-3.5 rounded-2xl border transition-all ${isToday ? 'bg-[#F0EEE9]/50 border-indigo-200' : 'border-[#F0EEE9] hover:bg-gray-50'}`}>
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">{day.icon}</span>
                       <div>
-                        <p className={`font-medium ${isToday ? 'text-indigo-900' : 'text-gray-900'}`}>
-                          {isToday ? 'วันนี้' : dateObj.toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'short' })}
+                        <p className="text-sm font-bold text-gray-800">
+                          {isToday ? 'วันนี้' : dateObj.toLocaleDateString('th-TH', { weekday: 'short', day: 'numeric', month: 'short' })}
                         </p>
-                        <p className="text-xs text-gray-500">{d.text}</p>
+                        <p className="text-xs text-gray-500">{day.text}</p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="font-bold text-gray-900">{d.max}°C</p>
-                      <p className="text-xs text-gray-500">{d.min}°C</p>
+                      <span className="text-sm font-bold text-gray-800">{Math.round(day.max)}°</span>
+                      <span className="text-xs text-gray-400 ml-1.5 font-medium">{Math.round(day.min)}°</span>
                     </div>
                   </div>
                 );
               })}
             </div>
-
-            <div className="mt-6 flex justify-between items-center bg-gray-50 p-4 rounded-xl text-sm">
-              <span className="text-gray-600">คุณภาพอากาศ (AQI) ปัจจุบัน:</span>
-              <button onClick={() => { setIsWeatherModalOpen(false); setIsAqiModalOpen(true); }} className={`font-bold underline cursor-pointer ${weather.aqi <= 50 ? 'text-emerald-600' : weather.aqi <= 100 ? 'text-yellow-600' : weather.aqi <= 150 ? 'text-orange-600' : 'text-red-600'}`}>
-                {weather.aqi} 😷 (ดูรายละเอียด)
-              </button>
-            </div>
           </div>
         </div>
       )}
 
-      {/* Real-time Air Quality (AQI) Modal */}
+      {/* Real-time AQI Modal */}
       {isAqiModalOpen && weather && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setIsAqiModalOpen(false)}>
-          <div className="bg-white rounded-3xl p-6 md:p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl relative animate-in fade-in zoom-in-95 duration-200 border border-gray-100" onClick={e => e.stopPropagation()}>
-            <button 
-              onClick={() => setIsAqiModalOpen(false)}
-              className="absolute top-5 right-5 p-2 text-gray-400 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6 pr-10">
-              <div>
-                <div className="flex items-center gap-2">
-                  <Wind className="w-6 h-6 text-[#87B3A8]" />
-                  <h2 className="text-2xl font-extrabold text-gray-900">รายงานคุณภาพอากาศ (เชียงใหม่)</h2>
-                </div>
-                <div className="flex items-center gap-2 mt-1 text-xs text-gray-500 font-medium">
-                  <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                  <span>ข้อมูลเรียลไทม์ (Open-Meteo Air Quality) • อัปเดตล่าสุด {weather.updatedAt}</span>
-                </div>
-              </div>
-              <button
-                onClick={() => fetchWeather(true)}
-                disabled={isRefreshingAqi}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold transition-all self-start sm:self-auto"
-              >
-                <RefreshCw className={`w-3.5 h-3.5 ${isRefreshingAqi ? 'animate-spin text-indigo-600' : ''}`} />
-                {isRefreshingAqi ? 'กำลังอัปเดต...' : 'อัปเดตข้อมูล'}
-              </button>
-            </div>
-
-            {/* Main AQI Banner */}
-            <div className={`p-6 rounded-2xl border mb-6 flex flex-col md:flex-row items-center justify-between gap-6 ${
-              weather.aqi <= 50 ? 'bg-emerald-50/70 border-emerald-200 text-emerald-900' :
-              weather.aqi <= 100 ? 'bg-amber-50/70 border-amber-200 text-amber-900' :
-              weather.aqi <= 150 ? 'bg-orange-50/70 border-orange-200 text-orange-900' :
-              weather.aqi <= 200 ? 'bg-red-50/70 border-red-200 text-red-900' :
-              'bg-purple-50/70 border-purple-200 text-purple-900'
-            }`}>
-              <div className="flex items-center gap-5">
-                <div className={`w-20 h-20 rounded-2xl flex flex-col items-center justify-center text-white shadow-md shrink-0 ${
-                  weather.aqi <= 50 ? 'bg-emerald-500' :
-                  weather.aqi <= 100 ? 'bg-amber-500' :
-                  weather.aqi <= 150 ? 'bg-orange-500' :
-                  weather.aqi <= 200 ? 'bg-red-500' :
-                  'bg-purple-600'
-                }`}>
-                  <span className="text-xs font-bold uppercase tracking-wider opacity-90">US AQI</span>
-                  <span className="text-3xl font-black leading-none mt-0.5">{weather.aqi}</span>
-                </div>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-md flex items-center justify-center z-50 p-4 transition-all duration-300">
+          <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-xl p-6 md:p-8 flex flex-col relative animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex justify-between items-center mb-6 pb-4 border-b border-[#F0EEE9]">
+              <div className="flex items-center gap-3">
+                <span className="text-3xl">😷</span>
                 <div>
-                  <span className="text-xs font-bold uppercase tracking-wider opacity-75">ระดับคุณภาพอากาศปัจจุบัน</span>
-                  <h3 className="text-2xl font-extrabold mt-0.5">
-                    {weather.aqi <= 50 ? 'คุณภาพอากาศดีมาก (Good)' :
-                     weather.aqi <= 100 ? 'คุณภาพอากาศปานกลาง (Moderate)' :
-                     weather.aqi <= 150 ? 'เริ่มมีผลกระทบต่อกลุ่มเสี่ยง (Unhealthy for Sensitive)' :
-                     weather.aqi <= 200 ? 'มีผลกระทบต่อสุขภาพ (Unhealthy)' :
-                     'อันตรายต่อสุขภาพอย่างมาก (Hazardous)'}
-                  </h3>
-                  <p className="text-sm mt-1 opacity-90 font-medium flex items-center gap-1.5">
-                    <ShieldAlert className="w-4 h-4 shrink-0" />
-                    {weather.aqi <= 50 ? 'อากาศบริสุทธิ์ เหมาะสำหรับกิจกรรมกลางแจ้งทุกประเภท' :
-                     weather.aqi <= 100 ? 'สามารถทำกิจกรรมกลางแจ้งได้ตามปกติ ผู้ที่แพ้ง่ายควรสังเกตอาการ' :
-                     weather.aqi <= 150 ? 'ควรลดระยะเวลาทำกิจกรรมกลางแจ้ง และสวมหน้ากากอนามัยป้องกันฝุ่น' :
-                     weather.aqi <= 200 ? 'หลีกเลี่ยงกิจกรรมกลางแจ้ง และต้องสวมหน้ากากป้องกันฝุ่น PM2.5' :
-                     'งดกิจกรรมกลางแจ้งทุกชนิด ปิดประตูหน้าต่างและเปิดเครื่องฟอกอากาศ'}
-                  </p>
+                  <h3 className="text-xl font-bold text-gray-800">ดัชนีคุณภาพอากาศ (Air Quality Index)</h3>
+                  <p className="text-sm text-gray-500">จังหวัดเชียงใหม่ • อัปเดตล่าสุด: {weather.updatedAt}</p>
                 </div>
               </div>
-            </div>
-
-            {/* AQI Scale Bar */}
-            <div className="mb-6">
-              <div className="flex justify-between text-[11px] font-bold text-gray-500 mb-1.5 px-1">
-                <span className="text-emerald-600">0-50 ดีมาก</span>
-                <span className="text-amber-600">51-100 ปานกลาง</span>
-                <span className="text-orange-600">101-150 เริ่มมีผล</span>
-                <span className="text-red-600">151-200 มีผลกระทบ</span>
-                <span className="text-purple-600">201+ อันตราย</span>
-              </div>
-              <div className="w-full h-3 rounded-full bg-gradient-to-r from-emerald-400 via-amber-400 via-orange-400 via-red-500 to-purple-600 relative shadow-inner">
-                <div 
-                  className="w-4 h-4 bg-white border-2 border-gray-900 rounded-full shadow-md absolute -top-0.5 -translate-x-1/2 transition-all duration-500"
-                  style={{ left: `${Math.min(100, Math.max(2, (weather.aqi / 250) * 100))}%` }}
-                  title={`AQI: ${weather.aqi}`}
-                />
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => fetchWeather(true)}
+                  disabled={isRefreshingAqi}
+                  className="text-gray-400 hover:text-indigo-600 hover:bg-gray-100 rounded-full p-2 transition-colors"
+                  title="รีเฟรชข้อมูล AQI"
+                >
+                  <RefreshCw className={`w-5 h-5 ${isRefreshingAqi ? 'animate-spin text-indigo-600' : ''}`} />
+                </button>
+                <button 
+                  onClick={() => setIsAqiModalOpen(false)} 
+                  className="text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-full p-2 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
             </div>
 
-            {/* Detailed Pollutants Grid */}
-            <h4 className="text-sm font-bold text-gray-700 mb-3">ค่าดัชนีมลพิษทางอากาศรายตัว (เรียลไทม์)</h4>
+            {/* AQI Overview Card */}
+            <div className={`p-6 rounded-3xl mb-6 text-center shadow-inner ${
+              weather.aqi <= 50 ? 'bg-emerald-50 text-emerald-900 border border-emerald-200' : 
+              weather.aqi <= 100 ? 'bg-yellow-50 text-yellow-900 border border-yellow-200' : 
+              weather.aqi <= 150 ? 'bg-orange-50 text-orange-900 border border-orange-200' : 
+              weather.aqi <= 200 ? 'bg-red-50 text-red-900 border border-red-200' : 'bg-purple-50 text-purple-900 border border-purple-200'
+            }`}>
+              <span className="text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-white/70 shadow-sm">
+                US AQI
+              </span>
+              <p className="text-5xl font-extrabold mt-3 tracking-tight">{weather.aqi}</p>
+              <p className="text-lg font-bold mt-1">
+                {weather.aqi <= 50 ? 'คุณภาพอากาศดีมาก (Good)' : 
+                 weather.aqi <= 100 ? 'คุณภาพอากาศปานกลาง (Moderate)' : 
+                 weather.aqi <= 150 ? 'เริ่มมีผลกระทบต่อสุขภาพ (Unhealthy for Sensitive Groups)' : 
+                 weather.aqi <= 200 ? 'มีผลกระทบต่อสุขภาพ (Unhealthy)' : 'มีผลกระทบต่อสุขภาพอย่างยิ่ง (Very Unhealthy)'}
+              </p>
+              <p className="text-xs mt-2 opacity-80 max-w-md mx-auto">
+                {weather.aqi <= 50 ? 'สามารถทำกิจกรรมกลางแจ้งและเปิดหน้าต่างระบายอากาศได้ตามปกติ' : 
+                 weather.aqi <= 100 ? 'ผู้มีโรคประจำตัวระบบทางเดินหายใจควรหลีกเลี่ยงการออกกำลังกายกลางแจ้งเป็นเวลานาน' : 
+                 weather.aqi <= 150 ? 'กลุ่มเสี่ยงควรสวมหน้ากากป้องกันฝุ่นเมื่อออกนอกอาคาร' : 
+                 'ควรสวมหน้ากาก N95 เมื่อออกนอกอาคาร และใช้เครื่องฟอกอากาศภายในอาคาร'}
+              </p>
+            </div>
+
+            {/* Pollutants Breakdown */}
+            <h4 className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-1.5">
+              <Wind className="w-4 h-4 text-indigo-500" /> ระดับสารมลพิษในอากาศ
+            </h4>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
-              <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-gray-500">PM2.5</span>
-                  <span className="text-[11px] px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 font-bold">ฝุ่นขนาดเล็ก</span>
-                </div>
-                <p className="text-2xl font-black text-gray-900 mt-1">{weather.pm2_5} <span className="text-xs font-medium text-gray-500">µg/m³</span></p>
+              <div className="p-3 rounded-2xl bg-gray-50 border border-gray-100 text-center">
+                <span className="text-xs text-gray-500 font-semibold">PM2.5</span>
+                <p className="text-lg font-extrabold text-gray-800">{Math.round(weather.pm2_5)} <span className="text-xs font-normal text-gray-400">µg/m³</span></p>
               </div>
-
-              <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-gray-500">PM10</span>
-                  <span className="text-[11px] px-2 py-0.5 rounded-full bg-gray-200/70 text-gray-600 font-bold">ฝุ่นละออง</span>
-                </div>
-                <p className="text-2xl font-black text-gray-900 mt-1">{weather.pm10} <span className="text-xs font-medium text-gray-500">µg/m³</span></p>
+              <div className="p-3 rounded-2xl bg-gray-50 border border-gray-100 text-center">
+                <span className="text-xs text-gray-500 font-semibold">PM10</span>
+                <p className="text-lg font-extrabold text-gray-800">{Math.round(weather.pm10)} <span className="text-xs font-normal text-gray-400">µg/m³</span></p>
               </div>
-
-              <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-gray-500">O₃ (โอโซน)</span>
-                  <span className="text-[11px] px-2 py-0.5 rounded-full bg-sky-50 text-sky-600 font-bold">ก๊าซโอโซน</span>
-                </div>
-                <p className="text-2xl font-black text-gray-900 mt-1">{weather.o3} <span className="text-xs font-medium text-gray-500">µg/m³</span></p>
+              <div className="p-3 rounded-2xl bg-gray-50 border border-gray-100 text-center">
+                <span className="text-xs text-gray-500 font-semibold">UV Index</span>
+                <p className="text-lg font-extrabold text-gray-800">{weather.uv} <span className="text-xs font-normal text-gray-400">/ 11</span></p>
               </div>
-
-              <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-gray-500">CO</span>
-                  <span className="text-[11px] font-medium text-gray-400">คาร์บอนมอนอกไซด์</span>
-                </div>
-                <p className="text-xl font-black text-gray-900 mt-1">{weather.co} <span className="text-xs font-medium text-gray-500">µg/m³</span></p>
+              <div className="p-3 rounded-2xl bg-gray-50 border border-gray-100 text-center">
+                <span className="text-xs text-gray-500 font-semibold">Ozone (O₃)</span>
+                <p className="text-lg font-extrabold text-gray-800">{Math.round(weather.o3)} <span className="text-xs font-normal text-gray-400">µg/m³</span></p>
               </div>
-
-              <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-gray-500">NO₂ / SO₂</span>
-                  <span className="text-[11px] font-medium text-gray-400">ไนโตรเจน/ซัลเฟอร์</span>
-                </div>
-                <p className="text-xl font-black text-gray-900 mt-1">{weather.no2} / {weather.so2} <span className="text-xs font-medium text-gray-500">µg/m³</span></p>
+              <div className="p-3 rounded-2xl bg-gray-50 border border-gray-100 text-center">
+                <span className="text-xs text-gray-500 font-semibold">NO₂</span>
+                <p className="text-lg font-extrabold text-gray-800">{Math.round(weather.no2)} <span className="text-xs font-normal text-gray-400">µg/m³</span></p>
               </div>
-
-              <div className="bg-amber-50/60 p-4 rounded-2xl border border-amber-100">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-amber-700 flex items-center gap-1"><Sun className="w-3.5 h-3.5" /> UV Index</span>
-                  <span className="text-[11px] font-bold text-amber-600">รังสียูวี</span>
-                </div>
-                <p className="text-2xl font-black text-amber-900 mt-1">{weather.uv}</p>
+              <div className="p-3 rounded-2xl bg-gray-50 border border-gray-100 text-center">
+                <span className="text-xs text-gray-500 font-semibold">SO₂</span>
+                <p className="text-lg font-extrabold text-gray-800">{Math.round(weather.so2)} <span className="text-xs font-normal text-gray-400">µg/m³</span></p>
               </div>
             </div>
 
-            {/* Hourly AQI Trend Today (24Hr format) */}
+            {/* Hourly AQI Mini-chart */}
             {weather.hourlyAqi && weather.hourlyAqi.length > 0 && (
               <div>
-                <h4 className="text-sm font-bold text-gray-700 mb-3">แนวโน้มคุณภาพอากาศรายชั่วโมงวันนี้ (รูปแบบ 24 ชม.)</h4>
-                <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
-                  {weather.hourlyAqi.map((item: any, idx: number) => (
-                    <div key={idx} className="bg-gray-50 p-2.5 rounded-xl border border-gray-100 text-center flex flex-col items-center">
-                      <span className="text-[11px] font-bold text-gray-500">{item.time} น.</span>
-                      <span className={`text-sm font-black my-1 px-2 py-0.5 rounded-lg ${
-                        item.aqi <= 50 ? 'bg-emerald-100 text-emerald-700' :
-                        item.aqi <= 100 ? 'bg-amber-100 text-amber-700' :
-                        item.aqi <= 150 ? 'bg-orange-100 text-orange-700' :
-                        'bg-red-100 text-red-700'
-                      }`}>
-                        {item.aqi}
-                      </span>
-                      <span className="text-[10px] text-gray-400">PM2.5: {item.pm2_5}</span>
+                <h4 className="text-sm font-bold text-gray-700 mb-2 flex items-center gap-1.5">
+                  <Sun className="w-4 h-4 text-amber-500" /> แนวโน้มค่า AQI รายชั่วโมงวันนี้
+                </h4>
+                <div className="flex gap-2 overflow-x-auto pb-2 pt-1">
+                  {weather.hourlyAqi.map((h: any, idx: number) => (
+                    <div key={idx} className="flex flex-col items-center p-2 rounded-xl bg-gray-50 border border-gray-100 min-w-[58px] shrink-0 text-center">
+                      <span className="text-[11px] text-gray-500">{h.time}</span>
+                      <span className={`text-xs font-bold mt-1 px-1.5 py-0.5 rounded-md ${
+                        h.aqi <= 50 ? 'bg-emerald-100 text-emerald-800' : 
+                        h.aqi <= 100 ? 'bg-yellow-100 text-yellow-800' : 
+                        h.aqi <= 150 ? 'bg-orange-100 text-orange-800' : 'bg-red-100 text-red-800'
+                      }`}>{h.aqi}</span>
                     </div>
                   ))}
                 </div>
@@ -673,7 +683,6 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
-
     </div>
   );
 }

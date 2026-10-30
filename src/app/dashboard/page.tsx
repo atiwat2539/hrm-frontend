@@ -21,12 +21,6 @@ export default function DashboardPage() {
   const [isAqiModalOpen, setIsAqiModalOpen] = useState(false);
   const [isRefreshingAqi, setIsRefreshingAqi] = useState(false);
 
-  // Selected Evaluation Round (Fiscal Year)
-  const [selectedYear, setSelectedYear] = useState<number>(() => {
-    const d = new Date();
-    return d.getMonth() + 1 >= 6 ? d.getFullYear() + 1 : d.getFullYear();
-  });
-
   const fetchWeather = async (showSpinner = false) => {
     try {
       if (showSpinner) setIsRefreshingAqi(true);
@@ -96,7 +90,7 @@ export default function DashboardPage() {
     }
   };
 
-  const fetchDashboardStats = async (year = selectedYear) => {
+  const fetchDashboardStats = async () => {
     try {
       const token = localStorage.getItem('token');
       if (!token) return;
@@ -105,8 +99,7 @@ export default function DashboardPage() {
       if (storedUser) setUser(JSON.parse(storedUser));
 
       const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/dashboard/stats`, {
-        headers: { Authorization: `Bearer ${token}` },
-        params: { year }
+        headers: { Authorization: `Bearer ${token}` }
       });
       setDashboardData(res.data);
     } catch (err) {
@@ -118,19 +111,19 @@ export default function DashboardPage() {
 
   useEffect(() => {
     fetchWeather();
+    fetchDashboardStats();
     const aqiInterval = setInterval(() => fetchWeather(false), 60 * 60 * 1000);
     return () => clearInterval(aqiInterval);
   }, []);
-
-  useEffect(() => {
-    fetchDashboardStats(selectedYear);
-  }, [selectedYear]);
 
   if (loading) {
     return (
       <LoadingSpinner />
     );
   }
+
+  // Actual Evaluation Round (Fiscal Year) from database/system
+  const currentYear = dashboardData?.currentYear || (new Date().getMonth() + 1 >= 6 ? new Date().getFullYear() + 1 : new Date().getFullYear());
 
   // Fallbacks if data fails to load
   const totalEmployees = dashboardData?.totalEmployees || 0;
@@ -170,15 +163,15 @@ export default function DashboardPage() {
       color: '#B3C2F2' 
     },
     { 
-      name: `เป้าหมาย KPI (พ.ศ. ${selectedYear + 543})`, 
+      name: `เป้าหมาย KPI (พ.ศ. ${currentYear + 543})`, 
       value: totalKpis.toString(), 
       icon: Target, 
-      change: `หัวข้อประเมินปี ${selectedYear + 543}`, 
+      change: `รอบปี พ.ศ. ${currentYear + 543}`, 
       changeType: 'positive', 
       color: '#F4D8D8' 
     },
     { 
-      name: `KPI ที่สำเร็จ (พ.ศ. ${selectedYear + 543})`, 
+      name: `KPI ที่สำเร็จ (พ.ศ. ${currentYear + 543})`, 
       value: kpiCompleted, 
       icon: Target, 
       change: `คะแนนเฉลี่ย ${averageKpiScore}`, 
@@ -199,28 +192,6 @@ export default function DashboardPage() {
           <p className="text-sm text-gray-600 mt-1">ภาพรวมการปฏิบัติงานและตัวชี้วัด</p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          {/* Evaluation Year Selector */}
-          <div className="bg-white/80 backdrop-blur px-4 py-2 rounded-2xl shadow-sm border border-[#F0EEE9] font-medium flex items-center gap-2 hover:border-indigo-300 transition-colors">
-            <Target className="w-4 h-4 text-indigo-600 shrink-0" />
-            <span className="text-xs text-gray-500 font-semibold whitespace-nowrap">รอบปีประเมิน:</span>
-            <select
-              value={selectedYear}
-              onChange={e => setSelectedYear(Number(e.target.value))}
-              className="bg-transparent text-sm font-bold text-indigo-700 outline-none cursor-pointer pr-1"
-            >
-              {[3, 2, 1, 0, -1, -2].map(offset => {
-                const y = new Date().getFullYear() + offset;
-                const currentSystemFy = new Date().getMonth() + 1 >= 6 ? new Date().getFullYear() + 1 : new Date().getFullYear();
-                const isCurrent = y === currentSystemFy;
-                return (
-                  <option key={y} value={y}>
-                    พ.ศ. {y + 543} {isCurrent ? '(ปัจจุบัน)' : ''}
-                  </option>
-                );
-              })}
-            </select>
-          </div>
-
           {weather && (
             <>
               <div 
@@ -345,12 +316,12 @@ export default function DashboardPage() {
         {/* KPI Distribution Chart */}
         <div className="bg-white p-6 rounded-3xl shadow-sm border border-[#F0EEE9] hover:shadow-xl transition-all duration-300 flex flex-col min-h-[450px]">
           <h3 className="text-xl font-bold text-gray-800 mb-1">สถานะ KPI ภาพรวม</h3>
-          <p className="text-sm text-gray-500 mb-6">รอบปีการประเมิน พ.ศ. {selectedYear + 543}</p>
+          <p className="text-sm text-gray-500 mb-6">รอบปีการประเมิน พ.ศ. {currentYear + 543}</p>
           <div className="flex-1 w-full relative">
             {totalKpis === 0 || kpiData.every((d: any) => d.value === 0) ? (
               <div className="flex flex-col h-full items-center justify-center text-gray-400 font-medium text-center p-4">
                 <Target className="w-10 h-10 mb-2 text-gray-300" />
-                <p>ยังไม่มีข้อมูล KPI ในรอบปี พ.ศ. {selectedYear + 543}</p>
+                <p>ยังไม่มีข้อมูล KPI ในรอบปี พ.ศ. {currentYear + 543}</p>
                 <Link href="/kpi" className="mt-2 text-xs text-indigo-600 font-semibold hover:underline">
                   ไปที่หน้าจัดการภาระงาน (KPI) →
                 </Link>
@@ -389,7 +360,7 @@ export default function DashboardPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-2">
           <div>
             <h3 className="text-xl font-bold text-gray-800">ความก้าวหน้าในการทำงานของบุคลากร</h3>
-            <p className="text-sm text-gray-500 mt-0.5">ผลสัมฤทธิ์ตามภาระงานรอบปี พ.ศ. {selectedYear + 543}</p>
+            <p className="text-sm text-gray-500 mt-0.5">ผลสัมฤทธิ์ตามภาระงานรอบปี พ.ศ. {currentYear + 543}</p>
           </div>
           <Link href="/kpi" className="text-xs text-indigo-600 font-semibold hover:underline">
             ดูตารางคะแนนทั้งหมด →
@@ -399,7 +370,7 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {!dashboardData?.individualKpiData || dashboardData.individualKpiData.length === 0 ? (
             <div className="text-center text-gray-400 py-6 col-span-full">
-              <p>ไม่มีข้อมูลความก้าวหน้าบุคลากรในรอบปี พ.ศ. {selectedYear + 543}</p>
+              <p>ไม่มีข้อมูลความก้าวหน้าบุคลากรในรอบปี พ.ศ. {currentYear + 543}</p>
               <Link href="/kpi" className="mt-2 inline-block text-xs text-indigo-600 font-semibold hover:underline">
                 ไปที่หน้าจัดการภาระงาน (KPI) →
               </Link>

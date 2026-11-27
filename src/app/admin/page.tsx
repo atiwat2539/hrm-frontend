@@ -4,7 +4,7 @@ import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
-import { Shield, Users, Save, Trash2, ShieldAlert } from 'lucide-react';
+import { Shield, Users, Save, Trash2, ShieldAlert, KeyRound } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function AdminPage() {
@@ -72,6 +72,20 @@ export default function AdminPage() {
       setUsers(users.map(u => u.id === id ? { ...u, status: newStatus } : u));
     } catch (err) {
       alert('Failed to update user status');
+    }
+  };
+
+  const handleResetUserPassword = async (userObj: any) => {
+    if (!confirm(`คุณต้องการรีเซ็ตรหัสผ่านของ "${userObj.username}" (${userObj.email}) เป็นค่าเริ่มต้น (password1234) หรือไม่?`)) return;
+    try {
+      const token = localStorage.getItem('token');
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const res = await axios.post(`${API_URL}/api/auth/reset-password`, { email: userObj.email }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      alert(res.data?.message || 'รีเซ็ตรหัสผ่านสำเร็จ');
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'ไม่สามารถรีเซ็ตรหัสผ่านได้');
     }
   };
 
@@ -165,13 +179,22 @@ export default function AdminPage() {
                     {new Date(user.created_at).toLocaleDateString('th-TH')}
                   </td>
                   <td className="px-6 py-4 text-center">
-                    <button
-                      onClick={() => handleDelete(user.id)}
-                      className="p-2.5 text-rose-500 hover:bg-rose-50 hover:text-rose-700 rounded-full transition-all duration-300 hover:scale-110 active:scale-95"
-                      title="ลบบัญชีผู้ใช้"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    <div className="flex items-center justify-center gap-1.5">
+                      <button
+                        onClick={() => handleResetUserPassword(user)}
+                        className="p-2.5 text-amber-600 hover:bg-amber-50 hover:text-amber-700 rounded-full transition-all duration-300 hover:scale-110 active:scale-95"
+                        title="รีเซ็ตรหัสผ่านเป็นค่าเริ่มต้น (password1234)"
+                      >
+                        <KeyRound className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(user.id)}
+                        className="p-2.5 text-rose-500 hover:bg-rose-50 hover:text-rose-700 rounded-full transition-all duration-300 hover:scale-110 active:scale-95"
+                        title="ลบบัญชีผู้ใช้"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

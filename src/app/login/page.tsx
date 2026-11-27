@@ -128,37 +128,23 @@ export default function LoginPage() {
               </div>
             </form>
           ) : (
-            <form className="space-y-6" onSubmit={handleResetPassword}>
+            <div className="space-y-6">
               <div className="text-center mb-4">
                 <h3 className="text-lg font-bold text-gray-900">ลืมรหัสผ่าน</h3>
-                <p className="text-sm text-gray-500 mt-1">กรอกอีเมลของคุณเพื่อรีเซ็ตรหัสผ่านใหม่</p>
+                <p className="text-sm text-gray-500 mt-1">คำแนะนำด้านความปลอดภัยของระบบ</p>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">อีเมล</label>
-                <div className="mt-1">
-                  <input
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                  />
-                </div>
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-800 space-y-2 leading-relaxed">
+                <p className="font-semibold">เพื่อป้องกันการสวมรอยรีเซ็ตรหัสผ่านโดยไม่ได้รับอนุญาต:</p>
+                <p>
+                  ระบบไม่อนุญาตให้รีเซ็ตรหัสผ่านแบบสาธารณะด้วยตนเอง กรุณาแจ้ง <strong>ผู้ดูแลระบบ (Admin)</strong> เพื่อทำการรีเซ็ตรหัสผ่านชั่วคราวให้คุณผ่านเมนู <strong>ระบบผู้ดูแล (Admin Panel)</strong>
+                </p>
               </div>
-              {error && (
-                <div className="text-red-500 text-sm font-medium text-center bg-red-50 p-2 rounded">
-                  {error}
-                </div>
-              )}
               <div className="flex flex-col gap-3">
-                <Button type="submit" disabled={loading} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white shadow-md">
-                  {loading ? 'กำลังดำเนินการ...' : 'รีเซ็ตรหัสผ่าน'}
-                </Button>
                 <Button type="button" variant="outline" onClick={() => { setIsForgotPassword(false); setError(''); }} className="w-full">
                   กลับไปหน้าเข้าสู่ระบบ
                 </Button>
               </div>
-            </form>
+            </div>
           )}
 
           {!isForgotPassword && (
